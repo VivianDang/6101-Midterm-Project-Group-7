@@ -35,6 +35,7 @@ customer <- data.frame(read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv"))
 str(customer)
 head(customer)
 ```
+
 ```{r asfactor}
 for(i in 2:21){
   # tenure, MonthlyCharges, TotalCharges
@@ -45,6 +46,7 @@ for(i in 2:21){
 levels(customer$SeniorCitizen) <- c("No", "Yes") # no=1, yes=2
 str(customer)
 ```
+
 ```{r cleanNA}
 summary(customer)  # there are 11 NA in TotalCharges
 customer <- na.omit(customer)
@@ -60,21 +62,36 @@ sum(is.na(customer))
 #summary(game$Generation)
 ```
 
-```{r plot}
-#par(mfrow=c(2, 2))
-#ggplot(customer, aes(x=)) +
-#  geom_bar(color="pink", outlier.color="red") +
-#  labs(title="Global Sales vs Platform", x="Platform(7th & 8th Generation)", y="Global Sales") +
-#  coord_cartesian(ylim = c(0, 2))
-#ggplot(test.example1a, aes(x=Platform, y=Global_Sales)) +
-#  geom_boxplot(color="pink", outlier.color="red") +
-#  labs(title="Global Sales vs Platform", x="Platform(7th Generation)", y="Global Sales") +
-#  coord_cartesian(ylim = c(0, 2))
-#ggplot(test.example1b, aes(x=Platform, y=Global_Sales)) +
-#  geom_boxplot(color="pink", outlier.color="red") +
-#  labs(title="Global Sales vs Platform", x="Platform(8th Generation)", y="Global Sales") +
-#  coord_cartesian(ylim = c(0, 2))
-#ggarange()
+```{r basicInfo plot}
+# gender seniorCitizen partner depedents
+par(mfrow=c(2, 2))
+gender <- ggplot(customer, aes(x=Churn, fill=gender)) +
+                  geom_bar(position="fill") +
+                  scale_fill_manual(name="Gender", values=c("pink3", "steelblue")) +
+                  scale_x_discrete(labels=c("No" = "Not Churn", "Yes" = "Churned")) +
+                  labs(title="", x="", y="Percentage") +
+                  theme(legend.position="top")
+senior <- ggplot(customer, aes(x=Churn, fill=SeniorCitizen)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Not Churn", "Yes" = "Churned")) +
+                   labs(title="", x="", y="Percentage") +
+                   theme(legend.position="top")
+partner <- ggplot(customer, aes(x=Churn, fill=Partner)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Not Churn", "Yes" = "Churned")) +
+                   labs(title="", x="", y="Percentage") +
+                   theme(legend.position="top")
+dependent <- ggplot(customer, aes(x=Churn, fill=Dependents)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Not Churn", "Yes" = "Churned")) +
+                   labs(title="", x="", y="Percentage") +
+                   theme(legend.position="top")
+basicInfo <- ggarrange(gender, senior, partner, dependent)
+annotate_figure(basicInfo, top = text_grob("Customer Basic Infomation", 
+               color = "Black", face = "bold", size = 14))
 ```
 
 ```{r correlationPlot}
