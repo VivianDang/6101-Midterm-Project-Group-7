@@ -1,6 +1,6 @@
 ---
-title: "Video Games Sales Project"
-author: "Group7"
+title: "Telco Customer Churn Project"
+author: "Group7-Bug Tornado"
 #date: "today"
 date: "`r Sys.Date()`"
 # this style requires installing rmdformats package 
@@ -33,7 +33,7 @@ options(scientific=T, digits = 3)
 ```{r import}
 customer <- data.frame(read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv"))
 str(customer)
-head(customer)
+#head(customer)
 ```
 
 ```{r asfactor}
@@ -53,14 +53,6 @@ customer <- na.omit(customer)
 sum(is.na(customer))
 ```
 
-```{r test1}
-#summary(game$Platform)
-#game$Generation[game$Platform %in% c("PS3",  "X360", "Wii")] <- "7"
-#game$Generation[game$Platform %in% c("PS4",  "XOne", "WiiU")] <- "8"
-#test.example1a <- subset(game, Platform %in% c("PS3",  "X360", "Wii"))
-#test.example1b <- subset(game, Platform %in% c("PS4",  "XOne", "WiiU"))
-#summary(game$Generation)
-```
 
 ```{r basicInfo plot}
 # gender seniorCitizen partner depedents
@@ -110,6 +102,6 @@ customercor <- cor(subset(customerNum, select=-c(customerID)), method="spearman"
 #customercor
 loadPkg("corrplot")
 #corrplot.mixed(customercor, tl.pos = "lt", number.cex = .5, tl.cex=0.8)
-corrplot(customercor, addCoef.col="black", number.cex=0.4, tl.cex=0.6)
+corrplot(customercor, addCoef.col="black", number.cex=0.4, tl.cex=0.6,title="Telco Customer Churn Correlation", mar=c(0,0,1,0))
 unloadPkg("corrplot")
 ```
