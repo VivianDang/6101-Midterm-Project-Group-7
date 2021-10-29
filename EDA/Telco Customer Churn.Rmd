@@ -56,35 +56,120 @@ sum(is.na(customer))
 
 ```{r basicInfo plot}
 # gender seniorCitizen partner depedents
-par(mfrow=c(2, 2))
-gender <- ggplot(customer, aes(x=Churn, fill=gender)) +
+gender <- ggplot(customer, aes(x=gender, fill=Churn)) +
                   geom_bar(position="fill") +
-                  scale_fill_manual(name="Gender", values=c("pink3", "steelblue")) +
-                  scale_x_discrete(labels=c("No" = "Not Churn", "Yes" = "Churned")) +
-                  labs(title="", x="", y="Percentage") +
+                  scale_fill_manual(values=c("pink3", "steelblue")) +
+                  labs(title="Gender", x="", y="Percentage") +
                   theme(legend.position="top")
-senior <- ggplot(customer, aes(x=Churn, fill=SeniorCitizen)) +
+senior <- ggplot(customer, aes(x=SeniorCitizen, fill=Churn)) +
                    geom_bar(position="fill") +
                    scale_fill_manual(values=c("pink3", "steelblue")) +
-                   scale_x_discrete(labels=c("No" = "Not Churn", "Yes" = "Churned")) +
-                   labs(title="", x="", y="Percentage") +
+                   scale_x_discrete(labels=c("No" = "Not senior", "Yes" = "Senior")) +
+                   labs(title="SeniorCitizen", x="", y="Percentage") +
                    theme(legend.position="top")
-partner <- ggplot(customer, aes(x=Churn, fill=Partner)) +
+partner <- ggplot(customer, aes(x=Partner, fill=Churn)) +
                    geom_bar(position="fill") +
                    scale_fill_manual(values=c("pink3", "steelblue")) +
-                   scale_x_discrete(labels=c("No" = "Not Churn", "Yes" = "Churned")) +
-                   labs(title="", x="", y="Percentage") +
+                   scale_x_discrete(labels=c("No" = "Have no partner", "Yes" = "Have a partner")) +
+                   labs(title="Partner", x="", y="Percentage") +
                    theme(legend.position="top")
-dependent <- ggplot(customer, aes(x=Churn, fill=Dependents)) +
+dependent <- ggplot(customer, aes(x=Dependents, fill=Churn)) +
                    geom_bar(position="fill") +
                    scale_fill_manual(values=c("pink3", "steelblue")) +
-                   scale_x_discrete(labels=c("No" = "Not Churn", "Yes" = "Churned")) +
-                   labs(title="", x="", y="Percentage") +
+                   scale_x_discrete(labels=c("No" = "Have no dependents", "Yes" = "Have dependents")) +
+                   labs(title="Dependent", x="", y="Percentage") +
                    theme(legend.position="top")
 basicInfo <- ggarrange(gender, senior, partner, dependent)
 annotate_figure(basicInfo, top = text_grob("Customer Basic Infomation", 
                color = "Black", face = "bold", size = 14))
 ```
+```{r basic characteristics}
+phone_service <- ggplot(customer, aes(x=PhoneService, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no phone service", "Yes" = "have phone services")) +
+                   labs(title="Phone Service", x="", y="Percentage") +
+                   theme(legend.position="top")
+phone_service
+multiple_lines <- ggplot(customer, aes(x=MultipleLines, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no multiple lines", "Yes" = "Have multiple lines")) +
+                   labs(title="Multiple lines", x="", y="Percentage") +
+                   theme(legend.position="top")
+multiple_lines
+internet_service <- ggplot(customer, aes(x=InternetService, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no internet service")) +
+                   labs(title="Internet services", x="Internet company", y="Percentage") +
+                   theme(legend.position="top")
+internet_service
+online_security <- ggplot(customer, aes(x=OnlineSecurity, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no online security", "Yes" = "have online security")) +
+                   labs(title="Online security", x="", y="Percentage") +
+                   theme(legend.position="top")
+online_security
+online_backup <- ggplot(customer, aes(x=OnlineBackup, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no online backup", "Yes" = "Have online backup")) +
+                   labs(title="Online backup", x="", y="Percentage") +
+                   theme(legend.position="top")
+online_backup
+device_protection <- ggplot(customer, aes(x=DeviceProtection, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no device protection", "Yes" = "Have device protection")) +
+                   labs(title="Device protection", x="", y="Percentage") +
+                   theme(legend.position="top")
+device_protection
+tech_support <- ggplot(customer, aes(x=TechSupport, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no tech support", "Yes" = "Have tech support")) +
+                   labs(title="Tech support", x="", y="Percentage") +
+                   theme(legend.position="top")
+tech_support
+streaming_TV <- ggplot(customer, aes(x=StreamingTV, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no streaming tv", "Yes" = "Have streaming tv")) +
+                   labs(title="Streaming tv", x="", y="Percentage") +
+                   theme(legend.position="top")
+streaming_TV
+streaming_movies <- ggplot(customer, aes(x=StreamingMovies, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no streaming movies", "Yes" = "Have streaming movies")) +
+                   labs(title="Streaming movies", x="", y="Percentage") +
+                   theme(legend.position="top")
+streaming_movies
+contract <- ggplot(customer, aes(x=Contract, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Contract", x="Method", y="Percentage") +
+                   theme(legend.position="top")
+contract
+paperless_billing <- ggplot(customer, aes(x=PaperlessBilling, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no paperless billing", "Yes" = "Have paperless billing")) +
+                   labs(title="Paperless billing", x="", y="Percentage") +
+                   theme(legend.position="top")
+paperless_billing
+payment_method <- ggplot(customer, aes(x=PaymentMethod, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Payment method", x="Method", y="Percentage") +
+                   theme(legend.position="top")
+payment_method
+
+
+```
+
 
 ```{r correlationPlot}
 customerNum = customer
