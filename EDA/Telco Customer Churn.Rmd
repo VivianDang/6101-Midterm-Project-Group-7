@@ -190,3 +190,28 @@ loadPkg("corrplot")
 corrplot(customercor, addCoef.col="black", number.cex=0.4, tl.cex=0.6,title="Telco Customer Churn Correlation", mar=c(0,0,1,0))
 unloadPkg("corrplot")
 ```
+
+```{r kdePlot}
+tenure <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
+            geom_density(aes(fill = Churn), alpha = 0.8) + 
+             labs(title="KDEplot for tenure") +
+              labs(x="tenure", y="density") +
+               theme(legend.position="top")
+tenure
+
+MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, color = Churn)) + 
+                   geom_density(aes(fill = Churn), alpha = 0.8) + 
+                    labs(title="KDEplot for MonthlyCharges") +
+                     labs(x="MonthlyCharges", y="density") +
+                      theme(legend.position="top")
+MonthlyCharges
+
+TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) + 
+                   geom_density(aes(fill = Churn), alpha = 0.8) + 
+                    labs(title="KDEplot for TotalCharges") +
+                     labs(x="TotalCharges", y="density") +
+                      theme(legend.position="top")
+TotalCharges
+```
+
+
