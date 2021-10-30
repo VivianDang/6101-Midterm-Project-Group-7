@@ -194,22 +194,43 @@ unloadPkg("corrplot")
 ```{r kdePlot}
 tenure <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
             geom_density(aes(fill = Churn), alpha = 0.8) + 
-             labs(title="KDEplot for tenure") +
-              labs(x="tenure", y="density") +
-               theme(legend.position="top")
+             scale_fill_manual(values=c("pink3", "steelblue")) +
+              labs(title="KDEplot for tenure") +
+               labs(x="tenure", y="density") +
+                theme(legend.position="top")
 tenure
 
 MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, color = Churn)) + 
                    geom_density(aes(fill = Churn), alpha = 0.8) + 
-                    labs(title="KDEplot for MonthlyCharges") +
-                     labs(x="MonthlyCharges", y="density") +
-                      theme(legend.position="top")
+                    scale_fill_manual(values=c("pink3", "steelblue")) +
+                     labs(title="KDEplot for MonthlyCharges") +
+                      labs(x="MonthlyCharges", y="density") +
+                       theme(legend.position="top")
 MonthlyCharges
 
 TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) + 
                    geom_density(aes(fill = Churn), alpha = 0.8) + 
-                    labs(title="KDEplot for TotalCharges") +
-                     labs(x="TotalCharges", y="density") +
-                      theme(legend.position="top")
+                    scale_fill_manual(values=c("pink3", "steelblue")) +
+                     labs(title="KDEplot for TotalCharges") +
+                      labs(x="TotalCharges", y="density") +
+                       theme(legend.position="top")
 TotalCharges
+```
+
+```{r ScatterPlot}
+tenure_MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, y = tenure, color = Churn)) + 
+            geom_point(aes(fill = Churn), size = 2, alpha = 0.6) + 
+             scale_fill_manual(values=c("pink3", "steelblue")) +
+              labs(title="ScatterPlot for tenure VS MonthlyCharges") +
+               labs(x="MonthlyCharges", y="tenure") +
+                theme(legend.position="top")
+tenure_MonthlyCharges
+
+tenure_TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, y = tenure, color = Churn)) + 
+            geom_point(aes(fill = Churn), size = 2, alpha = 0.6) + 
+             scale_fill_manual(values=c("pink3", "steelblue")) +
+              labs(title="ScatterPlot for tenure VS TotalCharges") +
+               labs(x="TotalCharges", y="tenure") +
+                theme(legend.position="top")
+tenure_TotalCharges
 ```
