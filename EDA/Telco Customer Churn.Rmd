@@ -29,7 +29,7 @@ options(scientific=T, digits = 3)
 ```
 
 # Description
-The Telco customer churn data contains information about a fictional telephone company that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. It indicates which customers have left, stayed, or signed up for their service.  
+The Telco customer churn data contains information about a telephone company that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. It indicates which customers have left, stayed, or signed up for their service.  
 Studying such data can help companies identify the characteristics of lost customers, identify potential, soon-to-be-lost customers and develop appropriate strategies to retain them.  
 The dataset is WA_Fn-UseC_-Telco-Customer-Churn.csv.  
 
