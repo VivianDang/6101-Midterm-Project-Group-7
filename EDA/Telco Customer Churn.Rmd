@@ -319,6 +319,10 @@ tc3 <- ggplot(customer, aes(x=tenure, y=TotalCharges, color=Churn)) +
 tc3/ (tc1+tc2) + plot_annotation(title = 'TotalCharges plot')
 ```
 
+The customers who have high total charge are likely to churn, no matter how long their tenure are. 
+
+The customers who have no phone service or no multiple lines, a month-to-month contract and a lower level total charge are more likely to churn.
+
 ```{r}
 #m1 <- ggplot(customer,aes(x = TotalCharges , y = MonthlyCharges , fill = Churn)) +
 #  geom_violin(alpha = 0.5, aes(linetype=NA)) +
@@ -333,6 +337,13 @@ m2 <- ggplot(customer,aes(x = MultipleLines , y = MonthlyCharges , fill = Churn)
 
 m1/m2 + plot_annotation(title = 'MonthlyCharges plot')
 ```
+The customers who have high monthly charge are more likely to churn before their total charge increasing.
+
+If the customers have no multiple lines service , they are likely to churn if their monthly charge are greater than 75 or between 30 and 50.
+
+If they have no phone service, we will find an interesting results that the more monthly charge they have, the less customer will churn.
+
+And if the customers have multiple lines service, they are like to churn when they have a monthly charge approximately greater than 70.
 
 ```{r}
 t1 <- ggplot(customer,aes(x = Partner , y = tenure , fill = Churn)) +
@@ -352,6 +363,11 @@ t3 <- ggplot(customer,aes(x = PaymentMethod , y = tenure , fill = Churn)) +
 
 ```
 
+The customers who have no partner and short tenure are more likely to churn.
+
+The customers who have a month-to-month contract and short tenure are more likely to churn. Also, when they have long tenure and a 2 year contract, their possibility of churn are obviously increased.
+
+The payment method is also an factor. The customers who use electronic check or mailed check are more likely to churn if their tenure are short.
 
 ```{r}
 contract_jitter <- customerNum$Contract*50 +runif(length(customerNum$Contract), -10, 10)
@@ -373,3 +389,5 @@ c4 <- ggplot(customer, aes(x=contract_jitter, y=DeviceProtection_jitter, color=C
 
 (c1+c2)/(c3+c4)+plot_annotation(title = 'Contract Plot(wiht jittering)')
 ```
+
+These 4 variables (Online Security & Tech Support & Online Backup & Device Protection) are probably influence, because we find that when customer have anyone of them, they are more likely to churn if they have a month-to-month contract, except Device Protection. The result shows that there are many people have Device Protection and month-to-month contract but still churn, even thought the amount of these customers are less than the one who have no Device Protection.
