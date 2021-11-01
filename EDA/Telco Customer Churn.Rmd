@@ -28,12 +28,13 @@ options(scientific=T, digits = 3)
 # use scipen=999 to prevent scientific notation at all times
 ```
 
-# Description
-The Telco customer churn data contains information about a fictional telephone company that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. It indicates which customers have left, stayed, or signed up for their service.  
+# Telco Customer Churn
+## Description
+The Telco customer churn data contains information about a telephone company that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. It indicates which customers have left, stayed, or signed up for their service.  
 Studying such data can help companies identify the characteristics of lost customers, identify potential, soon-to-be-lost customers and develop appropriate strategies to retain them.  
 The dataset is WA_Fn-UseC_-Telco-Customer-Churn.csv.  
 
-## variables
+### variables
 
 * `gender`: Female or Male
 * `SeniorCitizen`: customer is a senior citizen or not (Yes, No)
@@ -80,7 +81,8 @@ sum(is.na(customer))
 ```
 
 # Exploratory Data Analysis (EDA)
-## Demographic information about customers
+## What factors influence customer churn? 
+### bar plots for categorical variables
 ```{r basicInfo plot}
 # gender seniorCitizen partner depedents
 gender <- ggplot(customer, aes(x=gender, fill=Churn)) +
@@ -110,7 +112,7 @@ basicInfo <- ggarrange(gender, senior, partner, dependent)
 annotate_figure(basicInfo, top = text_grob("Customer Basic Infomation", 
                color = "Black", face = "bold", size = 14))
 ```
-## Services customers has signed up for
+
 ```{r PhoneInfo plot}
 # PhoneService MultipleLines
 phone_service <- ggplot(customer, aes(x=PhoneService, fill=Churn)) +
@@ -181,7 +183,8 @@ StreamingInfo <- ggarrange(streaming_TV, streaming_movies)
 annotate_figure(StreamingInfo, top = text_grob("Streaming Information", 
                color = "Black", face = "bold", size = 14))
 ```
-## Customer account information
+
+
 ```{r PaymentInfo plot}
 #Contract PaperlessBilling PaymentMethod
 contract <- ggplot(customer, aes(x=Contract, fill=Churn)) +
@@ -198,6 +201,7 @@ paperless_billing <- ggplot(customer, aes(x=PaperlessBilling, fill=Churn)) +
 payment_method <- ggplot(customer, aes(x=PaymentMethod, fill=Churn)) +
                    geom_bar(position="fill") +
                    scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("Bank transfer (automatic)" = "bank transfer", "Electronic check" = "E-check", "Credit card (automatic)" = "credit card")) +
                    labs(title="Payment method", x="Method", y="Percentage") +
                    theme(legend.position="top")
 
@@ -205,6 +209,8 @@ PaymentInfo <- ggarrange(contract, paperless_billing, payment_method)
 annotate_figure(PaymentInfo, top = text_grob("Payment Information", 
                color = "Black", face = "bold", size = 14))
 ```
+
+### kde plots for numeric variables
 
 ```{r kdePlot}
 tenure <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
@@ -232,6 +238,7 @@ TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) +
 TotalCharges
 ```
 
+<<<<<<< HEAD
 ```{r ScatterPlot}
 tenure_MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, y = tenure, color = Churn)) + 
             geom_point(aes(fill = Churn), size = 1, alpha = 0.6) + 
@@ -248,9 +255,38 @@ tenure_TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, y = tenure,
                labs(x="TotalCharges", y="tenure") +
                 theme(legend.position="top")
 tenure_TotalCharges
+
+```
+Logistic regression is the appropriate regression analysis to predict a binary outcome (the dependent variable) based on a set of independent variables.
+
+
+```{r AUClm2}
+prob <- predict(lm2,customer, type = c("response"))
+customer$prob <- prob
+library(pROC)
+g <- roc(Churn ~ prob, data = customer)
+plot(g)
+auc(customer$Churn, prob)
 ```
 
-## Simple correlations
+```{r AUClm}
+prob1 <- predict(lm3,customer, type = c("response"))
+customer$prob <- prob1
+library(pROC)
+g1 <- roc(Churn ~ prob1, data = customer)
+plot(g1)
+auc(customer$Churn, prob1)
+```
+AUC (Area Under The Curve) - ROC (Receiver Operating Characteristics) curve is a performance measurement for the classification problems at various threshold settings. ROC is a probability curve and AUC represents the degree or measure of separability. It tells how much the model is capable of distinguishing between classes. Higher the AUC, the better the model is at predicting 0 classes as 0 and 1 classes as 1. By analogy, the Higher the AUC, the better the model is at distinguishing between customer with churn and no churn.
+
+
+
+```{r fitmodel}
+summary(lm2)
+```
+As we can see from this summary, tenure has negative correlated with churn and monthlycharges has positive correlated with churn. It means when we have a customer with lower tenure and high monthlycharges having more probability to churn. 
+
+### Simple correlations
 Since most of variables are factors, it makes more sense to check their Spearman correlations.  
 ```{r correlationPlot, fig.dim=c(8, 8)}
 customerNum = customer
@@ -264,7 +300,7 @@ for(i in 2:21){
 #str(customerNum)
 
 # corrplot with spearman method for categorical variables
-customercor <- cor(subset(customerNum, select=-c(customerID)), method="spearman")
+customercor <- cor(subset(customerNum, select=-c(customerID, prob)), method="spearman")
 #customercor
 loadPkg("corrplot")
 #corrplot.mixed(customercor, tl.pos = "lt", number.cex = .5, tl.cex=0.8)
@@ -274,6 +310,7 @@ unloadPkg("corrplot")
 
 Larger circle means higher correlation. We can see that churn has negative correlation with contract and tenure, which means that customer who stays longer with the company or has a longer contract terms is less likely to churn. Customer who signed up for online security service and  has technical support plan is also less likely to churn. So it makes sense that contract and tech support have positive correlation, which means most customers who signed up for a technical support plan also have longer contract term.  
 
+<<<<<<< HEAD
 ```{r violinplot}
 library(patchwork)
 
@@ -349,7 +386,4 @@ c4 <- ggplot(customer, aes(x=contract_jitter, y=DeviceProtection_jitter, color=C
 
 (c1+c2)/(c3+c4)+plot_annotation(title = 'Contract Plot(wiht jittering)')
 ```
-
-
-
 
