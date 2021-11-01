@@ -213,49 +213,36 @@ annotate_figure(PaymentInfo, top = text_grob("Payment Information",
 ### kde plots for numeric variables
 
 ```{r kdePlot}
-tenure <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
+tenure_kdeplot <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
             geom_density(aes(fill = Churn), alpha = 0.8) + 
              scale_fill_manual(values=c("pink3", "steelblue")) +
               labs(title="KDEplot for tenure") +
                labs(x="tenure", y="density") +
                 theme(legend.position="top")
-tenure
+tenure_kdeplot
 
-MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, color = Churn)) + 
+MonthlyCharges_kdeplot <- ggplot(data = customer, aes(x = MonthlyCharges, color = Churn)) + 
                    geom_density(aes(fill = Churn), alpha = 0.8) + 
                     scale_fill_manual(values=c("pink3", "steelblue")) +
                      labs(title="KDEplot for MonthlyCharges") +
                       labs(x="MonthlyCharges", y="density") +
                        theme(legend.position="top")
-MonthlyCharges
+MonthlyCharges_kdeplot
 
-TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) + 
+TotalCharges_kdeplot <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) + 
                    geom_density(aes(fill = Churn), alpha = 0.8) + 
                     scale_fill_manual(values=c("pink3", "steelblue")) +
                      labs(title="KDEplot for TotalCharges") +
                       labs(x="TotalCharges", y="density") +
                        theme(legend.position="top")
-TotalCharges
+TotalCharges_kdeplot
 ```
 
-<<<<<<< HEAD
-```{r ScatterPlot}
-tenure_MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, y = tenure, color = Churn)) + 
-            geom_point(aes(fill = Churn), size = 1, alpha = 0.6) + 
-             scale_fill_manual(values=c("pink3", "steelblue")) +
-              labs(title="ScatterPlot for tenure VS MonthlyCharges") +
-               labs(x="MonthlyCharges", y="tenure") +
-                theme(legend.position="top")
-tenure_MonthlyCharges
-
-tenure_TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, y = tenure, color = Churn)) + 
-            geom_point(aes(fill = Churn), size = 1, alpha = 0.6) + 
-             scale_fill_manual(values=c("pink3", "steelblue")) +
-              labs(title="ScatterPlot for tenure VS TotalCharges") +
-               labs(x="TotalCharges", y="tenure") +
-                theme(legend.position="top")
-tenure_TotalCharges
-
+```{r LogisticRegression}
+lm1 <- glm(Churn~tenure, family = binomial(link = "logit"), data = customer)
+lm2 <- glm(Churn~tenure + MonthlyCharges, family = binomial(link = "logit"), data = customer)
+lm3 <- glm(Churn~tenure + MonthlyCharges + TotalCharges, family = binomial(link = "logit"), data = customer)
+anova(lm1,lm2,lm3, test="LRT")
 ```
 Logistic regression is the appropriate regression analysis to predict a binary outcome (the dependent variable) based on a set of independent variables.
 
@@ -284,7 +271,7 @@ AUC (Area Under The Curve) - ROC (Receiver Operating Characteristics) curve is a
 ```{r fitmodel}
 summary(lm2)
 ```
-As we can see from this summary, tenure has negative correlated with churn and monthlycharges has positive correlated with churn. It means when we have a customer with lower tenure and high monthlycharges having more probability to churn. 
+As we can see from this summary, tenure has negative correlation with churn and monthlycharges has positive correlation with churn. It means when we have a customer with lower tenure and high monthlycharges having more probability to churn.
 
 ### Simple correlations
 Since most of variables are factors, it makes more sense to check their Spearman correlations.  
@@ -310,7 +297,7 @@ unloadPkg("corrplot")
 
 Larger circle means higher correlation. We can see that churn has negative correlation with contract and tenure, which means that customer who stays longer with the company or has a longer contract terms is less likely to churn. Customer who signed up for online security service and  has technical support plan is also less likely to churn. So it makes sense that contract and tech support have positive correlation, which means most customers who signed up for a technical support plan also have longer contract term.  
 
-<<<<<<< HEAD
+### violin and scatter plots for high correlated variables
 ```{r violinplot}
 library(patchwork)
 
@@ -327,7 +314,7 @@ tc2 <- ggplot(customer,aes(x = Contract , y = TotalCharges , fill = Churn)) +
 #  xlab("Tenure") + ylab("TotalCharges")
 
 tc3 <- ggplot(customer, aes(x=tenure, y=TotalCharges, color=Churn)) +
-   geom_point(size=0.6,alpha=0.4)
+  geom_point(size=0.6,alpha=0.4)
 
 tc3/ (tc1+tc2) + plot_annotation(title = 'TotalCharges plot')
 ```
@@ -338,7 +325,7 @@ tc3/ (tc1+tc2) + plot_annotation(title = 'TotalCharges plot')
 #  xlab("TotalCharges") + ylab("MonthlyCharges")
 
 m1 <- ggplot(customer, aes(x=MonthlyCharges, y=TotalCharges, color=Churn)) +
-   geom_point(size=0.1,alpha=0.4)
+  geom_point(size=0.1,alpha=0.4)
 
 m2 <- ggplot(customer,aes(x = MultipleLines , y = MonthlyCharges , fill = Churn)) +
   geom_violin(alpha = 0.5, aes(linetype=NA)) +
@@ -370,20 +357,19 @@ t3 <- ggplot(customer,aes(x = PaymentMethod , y = tenure , fill = Churn)) +
 contract_jitter <- customerNum$Contract*50 +runif(length(customerNum$Contract), -10, 10)
 OnlineSecurity_jitter <- customerNum$OnlineSecurity*50 +runif(length(customerNum$OnlineSecurity), -10, 10)
 c1 <- ggplot(customer, aes(x=contract_jitter, y=OnlineSecurity_jitter, color=Churn)) +
-   geom_point(size=0.01,alpha=0.8)
+  geom_point(size=0.01,alpha=0.8)
 
 TechSupport_jitter <- customerNum$TechSupport*50 +runif(length(customerNum$TechSupport), -10, 10)
 c2 <- ggplot(customer, aes(x=contract_jitter, y=TechSupport_jitter, color=Churn)) +
-   geom_point(size=0.01,alpha=0.8)
+  geom_point(size=0.01,alpha=0.8)
 
 OnlineBackupt_jitter <- customerNum$OnlineBackup*50 +runif(length(customerNum$OnlineBackup), -10, 10)
 c3 <- ggplot(customer, aes(x=contract_jitter, y=OnlineBackupt_jitter, color=Churn)) +
-   geom_point(size=0.01,alpha=0.8)
+  geom_point(size=0.01,alpha=0.8)
 
 DeviceProtection_jitter <- customerNum$DeviceProtection*50 +runif(length(customerNum$DeviceProtection), -10, 10)
 c4 <- ggplot(customer, aes(x=contract_jitter, y=DeviceProtection_jitter, color=Churn)) +
-   geom_point(size=0.01,alpha=0.8)
+  geom_point(size=0.01,alpha=0.8)
 
 (c1+c2)/(c3+c4)+plot_annotation(title = 'Contract Plot(wiht jittering)')
 ```
-
