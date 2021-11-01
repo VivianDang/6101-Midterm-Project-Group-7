@@ -390,4 +390,4 @@ c4 <- ggplot(customer, aes(x=contract_jitter, y=DeviceProtection_jitter, color=C
 (c1+c2)/(c3+c4)+plot_annotation(title = 'Contract Plot(wiht jittering)')
 ```
 
-These 4 variables (Online Security & Tech Support & Online Backup & Device Protection) are probably influence, because we find that when customer have anyone of them, they are more likely to churn if they have a month-to-month contract, except Device Protection. The result shows that there are many people have Device Protection and month-to-month contract but still churn, even thought the amount of these customers are less than the one who have no Device Protection.
+These 4 variables (Online Security & Tech Support & Online Backup & Device Protection) are probably influence, because we find that when customer do not have anyone of them, they are more likely to churn if they have a month-to-month contract, except Device Protection. The result shows that there are many people have Device Protection and month-to-month contract but still churn, even thought the amount of these customers are less than the one who have no Device Protection.
