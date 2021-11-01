@@ -207,44 +207,29 @@ annotate_figure(PaymentInfo, top = text_grob("Payment Information",
 ```
 
 ```{r kdePlot}
-tenure <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
+tenure_kdeplot <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
             geom_density(aes(fill = Churn), alpha = 0.8) + 
              scale_fill_manual(values=c("pink3", "steelblue")) +
               labs(title="KDEplot for tenure") +
                labs(x="tenure", y="density") +
                 theme(legend.position="top")
-tenure
+tenure_kdeplot
 
-MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, color = Churn)) + 
+MonthlyCharges_kdeplot <- ggplot(data = customer, aes(x = MonthlyCharges, color = Churn)) + 
                    geom_density(aes(fill = Churn), alpha = 0.8) + 
                     scale_fill_manual(values=c("pink3", "steelblue")) +
                      labs(title="KDEplot for MonthlyCharges") +
                       labs(x="MonthlyCharges", y="density") +
                        theme(legend.position="top")
-MonthlyCharges
+MonthlyCharges_kdeplot
 
-TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) + 
+TotalCharges_kdeplot <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) + 
                    geom_density(aes(fill = Churn), alpha = 0.8) + 
                     scale_fill_manual(values=c("pink3", "steelblue")) +
                      labs(title="KDEplot for TotalCharges") +
                       labs(x="TotalCharges", y="density") +
                        theme(legend.position="top")
-TotalCharges
-```
-
-```{r BoxPlot}
-tenure_boxplot <- ggplot(customer, aes(x=Churn, y=tenure, fill=Churn)) + 
-                   geom_boxplot( colour=c("pink3","steelblue"), outlier.size=2) +
-                    labs(title="tenure vs Churn boxplot ", x="Churn", y = "tenure")
-tenure_boxplot
-MonthlyCharges_boxplot <- ggplot(customer, aes(x=Churn, y=MonthlyCharges, fill=Churn)) + 
-                           geom_boxplot( colour=c("#ff0000","#11cc11"), outlier.size=2) +
-                            labs(title="MonthlyCharges vs Churn boxplot ", x="Churn", y = "MonthlyCharges")
-MonthlyCharges_boxplot
-TotalCharges_boxplot <- ggplot(customer, aes(x=Churn, y=TotalCharges, fill=Churn)) + 
-                         geom_boxplot( colour=c("pink3","steelblue"), outlier.size=2) +
-                          labs(title="TotalCharges vs Churn boxplot ", x="Churn", y = "TotalCharges")
-TotalCharges_boxplot
+TotalCharges_kdeplot
 ```
 
 ```{r LogisticRegression}
@@ -280,7 +265,7 @@ AUC (Area Under The Curve) - ROC (Receiver Operating Characteristics) curve is a
 ```{r fitmodel}
 summary(lm2)
 ```
-As we can see from this summary, tenure has negative correlated with churn and monthlycharges has positive correlated with churn. It means when we have a customer with lower tenure and high monthlycharges having more probability to churn. 
+As we can see from this summary, tenure has negative correlation with churn and monthlycharges has positive correlation with churn. It means when we have a customer with lower tenure and high monthlycharges having more probability to churn. 
 
 
 ## Simple correlations
