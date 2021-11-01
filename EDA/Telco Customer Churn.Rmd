@@ -301,7 +301,7 @@ for(i in 2:21){
 #str(customerNum)
 
 # corrplot with spearman method for categorical variables
-customercor <- cor(subset(customerNum, select=-c(customerID)), method="spearman")
+customercor <- cor(subset(customerNum, select=-c(customerID, prob)), method="spearman")
 #customercor
 loadPkg("corrplot")
 #corrplot.mixed(customercor, tl.pos = "lt", number.cex = .5, tl.cex=0.8)
