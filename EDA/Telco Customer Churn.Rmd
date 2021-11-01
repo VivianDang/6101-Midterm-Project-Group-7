@@ -234,7 +234,7 @@ TotalCharges
 
 ```{r ScatterPlot}
 tenure_MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, y = tenure, color = Churn)) + 
-            geom_point(aes(fill = Churn), size = 2, alpha = 0.6) + 
+            geom_point(aes(fill = Churn), size = 1, alpha = 0.6) + 
              scale_fill_manual(values=c("pink3", "steelblue")) +
               labs(title="ScatterPlot for tenure VS MonthlyCharges") +
                labs(x="MonthlyCharges", y="tenure") +
@@ -242,7 +242,7 @@ tenure_MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, y = ten
 tenure_MonthlyCharges
 
 tenure_TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, y = tenure, color = Churn)) + 
-            geom_point(aes(fill = Churn), size = 2, alpha = 0.6) + 
+            geom_point(aes(fill = Churn), size = 1, alpha = 0.6) + 
              scale_fill_manual(values=c("pink3", "steelblue")) +
               labs(title="ScatterPlot for tenure VS TotalCharges") +
                labs(x="TotalCharges", y="tenure") +
@@ -273,3 +273,83 @@ unloadPkg("corrplot")
 ```
 
 Larger circle means higher correlation. We can see that churn has negative correlation with contract and tenure, which means that customer who stays longer with the company or has a longer contract terms is less likely to churn. Customer who signed up for online security service and  has technical support plan is also less likely to churn. So it makes sense that contract and tech support have positive correlation, which means most customers who signed up for a technical support plan also have longer contract term.  
+
+```{r violinplot}
+library(patchwork)
+
+tc1 <- ggplot(customer,aes(x = MultipleLines , y = TotalCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("MultipleLines") + ylab("TotalCharges")
+
+tc2 <- ggplot(customer,aes(x = Contract , y = TotalCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Contract") + ylab("TotalCharges")
+
+#tc3 <- ggplot(customer,aes(x = tenure , y = TotalCharges , fill = Churn)) +
+#  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+#  xlab("Tenure") + ylab("TotalCharges")
+
+tc3 <- ggplot(customer, aes(x=tenure, y=TotalCharges, color=Churn)) +
+   geom_point(size=0.6,alpha=0.4)
+
+tc3/ (tc1+tc2) + plot_annotation(title = 'TotalCharges plot')
+```
+
+```{r}
+#m1 <- ggplot(customer,aes(x = TotalCharges , y = MonthlyCharges , fill = Churn)) +
+#  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+#  xlab("TotalCharges") + ylab("MonthlyCharges")
+
+m1 <- ggplot(customer, aes(x=MonthlyCharges, y=TotalCharges, color=Churn)) +
+   geom_point(size=0.1,alpha=0.4)
+
+m2 <- ggplot(customer,aes(x = MultipleLines , y = MonthlyCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("MultipleLines") + ylab("MonthlyCharges")
+
+m1/m2 + plot_annotation(title = 'MonthlyCharges plot')
+```
+
+```{r}
+t1 <- ggplot(customer,aes(x = Partner , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Partner") + ylab("Tenure")
+
+t2 <- ggplot(customer,aes(x = Contract , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Contract") + ylab("Tenure")
+
+t3 <- ggplot(customer,aes(x = PaymentMethod , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("PaymentMethod") + ylab("Tenure")
+
+(t1+t2)/t3 + 
+  plot_annotation(title = 'Tenure violinplot')
+
+```
+
+
+```{r}
+contract_jitter <- customerNum$Contract*50 +runif(length(customerNum$Contract), -10, 10)
+OnlineSecurity_jitter <- customerNum$OnlineSecurity*50 +runif(length(customerNum$OnlineSecurity), -10, 10)
+c1 <- ggplot(customer, aes(x=contract_jitter, y=OnlineSecurity_jitter, color=Churn)) +
+   geom_point(size=0.01,alpha=0.8)
+
+TechSupport_jitter <- customerNum$TechSupport*50 +runif(length(customerNum$TechSupport), -10, 10)
+c2 <- ggplot(customer, aes(x=contract_jitter, y=TechSupport_jitter, color=Churn)) +
+   geom_point(size=0.01,alpha=0.8)
+
+OnlineBackupt_jitter <- customerNum$OnlineBackup*50 +runif(length(customerNum$OnlineBackup), -10, 10)
+c3 <- ggplot(customer, aes(x=contract_jitter, y=OnlineBackupt_jitter, color=Churn)) +
+   geom_point(size=0.01,alpha=0.8)
+
+DeviceProtection_jitter <- customerNum$DeviceProtection*50 +runif(length(customerNum$DeviceProtection), -10, 10)
+c4 <- ggplot(customer, aes(x=contract_jitter, y=DeviceProtection_jitter, color=Churn)) +
+   geom_point(size=0.01,alpha=0.8)
+
+(c1+c2)/(c3+c4)+plot_annotation(title = 'Contract Plot(wiht jittering)')
+```
+
+
+
+
