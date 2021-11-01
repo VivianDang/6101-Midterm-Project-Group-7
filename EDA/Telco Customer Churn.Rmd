@@ -252,7 +252,7 @@ tenure_TotalCharges
 
 ## Simple correlations
 Since most of variables are factors, it makes more sense to check their Spearman correlations.  
-```{r correlationPlot}
+```{r correlationPlot, fig.dim=c(8, 8)}
 customerNum = customer
 # convert categorical variable as numeric for spearman method
 for(i in 2:21){
@@ -268,8 +268,8 @@ customercor <- cor(subset(customerNum, select=-c(customerID)), method="spearman"
 #customercor
 loadPkg("corrplot")
 #corrplot.mixed(customercor, tl.pos = "lt", number.cex = .5, tl.cex=0.8)
-corrplot(customercor, addCoef.col="black", number.cex=0.4, tl.cex=0.6,title="Telco Customer Churn Correlation", mar=c(0,0,1,0))
+corrplot(customercor, type="lower", addCoef.col="black", number.cex=0.5, tl.cex=0.7,title="Telco Customer Churn Correlation", mar=c(0,0,1,0))
 unloadPkg("corrplot")
 ```
 
-Larger circle means higher correlation. We can see that churn has negative correlation with contract and tenure, which means that customer who stays longer with the company or has a longer contract terms is less likely to churn. Customer who signed up for online security service and  has technical support plan is also less likely to churn. So it is logical to see that contract and tech support have positive correlation, which means most customers who signed up for a technical support plan also have longer contract term.  
+Larger circle means higher correlation. We can see that churn has negative correlation with contract and tenure, which means that customer who stays longer with the company or has a longer contract terms is less likely to churn. Customer who signed up for online security service and  has technical support plan is also less likely to churn. So it makes sense that contract and tech support have positive correlation, which means most customers who signed up for a technical support plan also have longer contract term.  
