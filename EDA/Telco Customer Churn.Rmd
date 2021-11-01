@@ -112,6 +112,7 @@ basicInfo <- ggarrange(gender, senior, partner, dependent)
 annotate_figure(basicInfo, top = text_grob("Customer Basic Infomation", 
                color = "Black", face = "bold", size = 14))
 ```
+In this group, gender and partner do not influence churn percentage. Whether the customers are senior citizens and whether they are dependent or not are two most influential factors.
 
 ```{r PhoneInfo plot}
 # PhoneService MultipleLines
@@ -132,7 +133,7 @@ PhoneInfo <- ggarrange(phone_service, multiple_lines)
 annotate_figure(PhoneInfo, top = text_grob("Phone Infomation", 
                color = "Black", face = "bold", size = 14))
 ```
-
+We can see that these two factors does not influence the churn percentage a lot, but the columns height are different. Therefore, they are not influential factors. 
 ```{r InternetInfo plot }
 #InternetService OnlineSecurity OnlineBackup DeviceProtection TechSupport StreamingTV StreamingMovies
 internet_service <- ggplot(customer, aes(x=InternetService, fill=Churn)) +
@@ -165,6 +166,7 @@ InternetInfo <- ggarrange(internet_service, online_security, online_backup,     
 annotate_figure(InternetInfo, top = text_grob("Internet Information", 
                color = "Black", face = "bold", size = 14))
 ```
+In the internet part, we can see these categorical variables all have influences on churn. However, online security and tech support are two remarkable factors. People with no online security and techn support will churn most. 
 
 ```{r StreamingInfo plot}
 #StreamingTV StreamingMovies
@@ -183,7 +185,7 @@ StreamingInfo <- ggarrange(streaming_TV, streaming_movies)
 annotate_figure(StreamingInfo, top = text_grob("Streaming Information", 
                color = "Black", face = "bold", size = 14))
 ```
-
+For streaming information, we neglect customers who does not have internet service. Without middle column, we can see that they do not influence churn a lot. 
 
 ```{r PaymentInfo plot}
 #Contract PaperlessBilling PaymentMethod
@@ -209,6 +211,7 @@ PaymentInfo <- ggarrange(contract, paperless_billing, payment_method)
 annotate_figure(PaymentInfo, top = text_grob("Payment Information", 
                color = "Black", face = "bold", size = 14))
 ```
+For the final part, they are all important factors. In payment method, we can see that the churn percentage of customers who choose to e-check is high. Maybe the online payment system is a trouble, and it influences the experience. Next, our team will introduce numeric variables. 
 
 ### kde plots for numeric variables
 
