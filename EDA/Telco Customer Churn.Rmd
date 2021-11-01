@@ -28,15 +28,41 @@ options(scientific=T, digits = 3)
 # use scipen=999 to prevent scientific notation at all times
 ```
 
-**Import Data**
+# Description
+The Telco customer churn data contains information about a fictional telephone company that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. It indicates which customers have left, stayed, or signed up for their service.  
+Studying such data can help companies identify the characteristics of lost customers, identify potential, soon-to-be-lost customers and develop appropriate strategies to retain them.  
+The dataset is WA_Fn-UseC_-Telco-Customer-Churn.csv.  
 
-```{r import}
+## variables
+
+* `gender`: Female or Male
+* `SeniorCitizen`: customer is a senior citizen or not (Yes, No)
+* `Partner`: customer has a partner or not (Yes, No)
+* `Dependents`: customer has dependents or not (Yes, No)
+* `tenure`: number of months the customer has stayed with the company
+* `PhoneService`: customer has a phone service or not (Yes, No)
+* `MultipleLines`: customer has multiple lines or not (Yes, No, No phone service)
+* `InternetService`: customer’s internet service provider (DSL, Fiber optic, No)
+* `OnlineSecurity`: customer has online security or not (Yes, No, No internet service)
+* `OnlineBackup`: customer has online backup or not (Yes, No, No internet service)
+* `DeviceProtection`: customer has device protection or not (Yes, No, No internet service)
+* `TechSupport`: customer has tech support or not (Yes, No, No internet service)
+* `StreamingTV`: customer has streaming TV or not (Yes, No, No internet service)
+* `StreamingMovies`: customer has streaming movies or not (Yes, No, No internet service)
+* `Contract`: contract term of the customer (Month-to-month, One year, Two year)
+* `PaperlessBilling`: customer has paperless billing or not (Yes, No)
+* `PaymentMethod`: Electronic check, Mailed check, Bank transfer (automatic), Credit card (automatic)
+* `MonthlyCharges`: amount charged monthly
+* `TotalCharges`: total amount charged
+* `Churn`: customer churned or not (Yes or No)
+
+```{r import, include=FALSE}
 customer <- data.frame(read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv"))
 str(customer)
 #head(customer)
 ```
 
-```{r asfactor}
+```{r asfactor, include=FALSE}
 for(i in 2:21){
   # tenure, MonthlyCharges, TotalCharges
   if (!(i %in% c(6, 19, 20))){
@@ -47,13 +73,14 @@ levels(customer$SeniorCitizen) <- c("No", "Yes") # no=1, yes=2
 str(customer)
 ```
 
-```{r cleanNA}
+```{r cleanNA, include=FALSE}
 summary(customer)  # there are 11 NA in TotalCharges
 customer <- na.omit(customer)
 sum(is.na(customer))
 ```
 
-
+# Exploratory Data Analysis (EDA)
+## Demographic information about customers
 ```{r basicInfo plot}
 # gender seniorCitizen partner depedents
 gender <- ggplot(customer, aes(x=gender, fill=Churn)) +
@@ -83,6 +110,7 @@ basicInfo <- ggarrange(gender, senior, partner, dependent)
 annotate_figure(basicInfo, top = text_grob("Customer Basic Infomation", 
                color = "Black", face = "bold", size = 14))
 ```
+## Services customers has signed up for
 ```{r PhoneInfo plot}
 # PhoneService MultipleLines
 phone_service <- ggplot(customer, aes(x=PhoneService, fill=Churn)) +
@@ -135,6 +163,7 @@ InternetInfo <- ggarrange(internet_service, online_security, online_backup,     
 annotate_figure(InternetInfo, top = text_grob("Internet Information", 
                color = "Black", face = "bold", size = 14))
 ```
+
 ```{r StreamingInfo plot}
 #StreamingTV StreamingMovies
 streaming_TV <- ggplot(customer, aes(x=StreamingTV, fill=Churn)) +
@@ -152,7 +181,7 @@ StreamingInfo <- ggarrange(streaming_TV, streaming_movies)
 annotate_figure(StreamingInfo, top = text_grob("Streaming Information", 
                color = "Black", face = "bold", size = 14))
 ```
-
+## Customer account information
 ```{r PaymentInfo plot}
 #Contract PaperlessBilling PaymentMethod
 contract <- ggplot(customer, aes(x=Contract, fill=Churn)) +
@@ -175,27 +204,6 @@ payment_method <- ggplot(customer, aes(x=PaymentMethod, fill=Churn)) +
 PaymentInfo <- ggarrange(contract, paperless_billing, payment_method)
 annotate_figure(PaymentInfo, top = text_grob("Payment Information", 
                color = "Black", face = "bold", size = 14))
-```
-
-
-```{r correlationPlot}
-customerNum = customer
-# convert categorical variable as numeric for spearman method
-for(i in 2:21){
-  # tenure, MonthlyCharges, TotalCharges
-  if (!(i %in% c(6, 19, 20))){
-    customerNum[,i] = as.numeric(customerNum[,i])
-  }
-}
-#str(customerNum)
-
-# corrplot with spearman method for categorical variables
-customercor <- cor(subset(customerNum, select=-c(customerID)), method="spearman")
-#customercor
-loadPkg("corrplot")
-#corrplot.mixed(customercor, tl.pos = "lt", number.cex = .5, tl.cex=0.8)
-corrplot(customercor, addCoef.col="black", number.cex=0.4, tl.cex=0.6,title="Telco Customer Churn Correlation", mar=c(0,0,1,0))
-unloadPkg("corrplot")
 ```
 
 ```{r kdePlot}
@@ -241,3 +249,27 @@ tenure_TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, y = tenure,
                 theme(legend.position="top")
 tenure_TotalCharges
 ```
+
+## Simple correlations
+Since most of variables are factors, it makes more sense to check their Spearman correlations.  
+```{r correlationPlot}
+customerNum = customer
+# convert categorical variable as numeric for spearman method
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+#str(customerNum)
+
+# corrplot with spearman method for categorical variables
+customercor <- cor(subset(customerNum, select=-c(customerID)), method="spearman")
+#customercor
+loadPkg("corrplot")
+#corrplot.mixed(customercor, tl.pos = "lt", number.cex = .5, tl.cex=0.8)
+corrplot(customercor, addCoef.col="black", number.cex=0.4, tl.cex=0.6,title="Telco Customer Churn Correlation", mar=c(0,0,1,0))
+unloadPkg("corrplot")
+```
+
+Larger circle means higher correlation. We can see that churn has negative correlation with contract and tenure, which means that customer who stays longer with the company or has a longer contract terms is less likely to churn. Customer who signed up for online security service and  has technical support plan is also less likely to churn. So it is logical to see that contract and tech support have positive correlation, which means most customers who signed up for a technical support plan also have longer contract term.  
