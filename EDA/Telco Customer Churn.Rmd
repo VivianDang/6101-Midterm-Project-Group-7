@@ -28,12 +28,13 @@ options(scientific=T, digits = 3)
 # use scipen=999 to prevent scientific notation at all times
 ```
 
-# Description
+# Telco Customer Churn
+## Description
 The Telco customer churn data contains information about a telephone company that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. It indicates which customers have left, stayed, or signed up for their service.  
 Studying such data can help companies identify the characteristics of lost customers, identify potential, soon-to-be-lost customers and develop appropriate strategies to retain them.  
 The dataset is WA_Fn-UseC_-Telco-Customer-Churn.csv.  
 
-## variables
+### variables
 
 * `gender`: Female or Male
 * `SeniorCitizen`: customer is a senior citizen or not (Yes, No)
@@ -80,7 +81,8 @@ sum(is.na(customer))
 ```
 
 # Exploratory Data Analysis (EDA)
-## Demographic information about customers
+## What factors influence customer churn? 
+### bar plots for categorical variables
 ```{r basicInfo plot}
 # gender seniorCitizen partner depedents
 gender <- ggplot(customer, aes(x=gender, fill=Churn)) +
@@ -110,7 +112,7 @@ basicInfo <- ggarrange(gender, senior, partner, dependent)
 annotate_figure(basicInfo, top = text_grob("Customer Basic Infomation", 
                color = "Black", face = "bold", size = 14))
 ```
-## Services customers has signed up for
+
 ```{r PhoneInfo plot}
 # PhoneService MultipleLines
 phone_service <- ggplot(customer, aes(x=PhoneService, fill=Churn)) +
@@ -181,7 +183,8 @@ StreamingInfo <- ggarrange(streaming_TV, streaming_movies)
 annotate_figure(StreamingInfo, top = text_grob("Streaming Information", 
                color = "Black", face = "bold", size = 14))
 ```
-## Customer account information
+
+
 ```{r PaymentInfo plot}
 #Contract PaperlessBilling PaymentMethod
 contract <- ggplot(customer, aes(x=Contract, fill=Churn)) +
@@ -206,6 +209,8 @@ PaymentInfo <- ggarrange(contract, paperless_billing, payment_method)
 annotate_figure(PaymentInfo, top = text_grob("Payment Information", 
                color = "Black", face = "bold", size = 14))
 ```
+
+### kde plots for numeric variables
 
 ```{r kdePlot}
 tenure <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
@@ -283,8 +288,7 @@ summary(lm2)
 ```
 As we can see from this summary, tenure has negative correlated with churn and monthlycharges has positive correlated with churn. It means when we have a customer with lower tenure and high monthlycharges having more probability to churn. 
 
-
-## Simple correlations
+### Simple correlations
 Since most of variables are factors, it makes more sense to check their Spearman correlations.  
 ```{r correlationPlot, fig.dim=c(8, 8)}
 customerNum = customer
@@ -307,3 +311,4 @@ unloadPkg("corrplot")
 ```
 
 Larger circle means higher correlation. We can see that churn has negative correlation with contract and tenure, which means that customer who stays longer with the company or has a longer contract terms is less likely to churn. Customer who signed up for online security service and  has technical support plan is also less likely to churn. So it makes sense that contract and tech support have positive correlation, which means most customers who signed up for a technical support plan also have longer contract term.  
+
