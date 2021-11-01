@@ -232,23 +232,56 @@ TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) +
 TotalCharges
 ```
 
-```{r ScatterPlot}
-tenure_MonthlyCharges <- ggplot(data = customer, aes(x = MonthlyCharges, y = tenure, color = Churn)) + 
-            geom_point(aes(fill = Churn), size = 2, alpha = 0.6) + 
-             scale_fill_manual(values=c("pink3", "steelblue")) +
-              labs(title="ScatterPlot for tenure VS MonthlyCharges") +
-               labs(x="MonthlyCharges", y="tenure") +
-                theme(legend.position="top")
-tenure_MonthlyCharges
-
-tenure_TotalCharges <- ggplot(data = customer, aes(x = TotalCharges, y = tenure, color = Churn)) + 
-            geom_point(aes(fill = Churn), size = 2, alpha = 0.6) + 
-             scale_fill_manual(values=c("pink3", "steelblue")) +
-              labs(title="ScatterPlot for tenure VS TotalCharges") +
-               labs(x="TotalCharges", y="tenure") +
-                theme(legend.position="top")
-tenure_TotalCharges
+```{r BoxPlot}
+tenure_boxplot <- ggplot(customer, aes(x=Churn, y=tenure, fill=Churn)) + 
+                   geom_boxplot( colour=c("pink3","steelblue"), outlier.size=2) +
+                    labs(title="tenure vs Churn boxplot ", x="Churn", y = "tenure")
+tenure_boxplot
+MonthlyCharges_boxplot <- ggplot(customer, aes(x=Churn, y=MonthlyCharges, fill=Churn)) + 
+                           geom_boxplot( colour=c("#ff0000","#11cc11"), outlier.size=2) +
+                            labs(title="MonthlyCharges vs Churn boxplot ", x="Churn", y = "MonthlyCharges")
+MonthlyCharges_boxplot
+TotalCharges_boxplot <- ggplot(customer, aes(x=Churn, y=TotalCharges, fill=Churn)) + 
+                         geom_boxplot( colour=c("pink3","steelblue"), outlier.size=2) +
+                          labs(title="TotalCharges vs Churn boxplot ", x="Churn", y = "TotalCharges")
+TotalCharges_boxplot
 ```
+
+```{r LogisticRegression}
+lm1 <- glm(Churn~tenure, family = binomial(link = "logit"), data = customer)
+lm2 <- glm(Churn~tenure + MonthlyCharges, family = binomial(link = "logit"), data = customer)
+lm3 <- glm(Churn~tenure + MonthlyCharges + TotalCharges, family = binomial(link = "logit"), data = customer)
+anova(lm1,lm2,lm3, test="LRT")
+```
+Logistic regression is the appropriate regression analysis to predict a binary outcome (the dependent variable) based on a set of independent variables.
+
+
+```{r AUClm2}
+prob <- predict(lm2,customer, type = c("response"))
+customer$prob <- prob
+library(pROC)
+g <- roc(Churn ~ prob, data = customer)
+plot(g)
+auc(customer$Churn, prob)
+```
+
+```{r AUClm}
+prob1 <- predict(lm3,customer, type = c("response"))
+customer$prob <- prob1
+library(pROC)
+g1 <- roc(Churn ~ prob1, data = customer)
+plot(g1)
+auc(customer$Churn, prob1)
+```
+AUC (Area Under The Curve) - ROC (Receiver Operating Characteristics) curve is a performance measurement for the classification problems at various threshold settings. ROC is a probability curve and AUC represents the degree or measure of separability. It tells how much the model is capable of distinguishing between classes. Higher the AUC, the better the model is at predicting 0 classes as 0 and 1 classes as 1. By analogy, the Higher the AUC, the better the model is at distinguishing between customer with churn and no churn.
+
+
+
+```{r fitmodel}
+summary(lm2)
+```
+As we can see from this summary, tenure has negative correlated with churn and monthlycharges has positive correlated with churn. It means when we have a customer with lower tenure and high monthlycharges having more probability to churn. 
+
 
 ## Simple correlations
 Since most of variables are factors, it makes more sense to check their Spearman correlations.  
