@@ -201,6 +201,7 @@ paperless_billing <- ggplot(customer, aes(x=PaperlessBilling, fill=Churn)) +
 payment_method <- ggplot(customer, aes(x=PaymentMethod, fill=Churn)) +
                    geom_bar(position="fill") +
                    scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("Bank transfer (automatic)" = "bank transfer", "Electronic check" = "E-check", "Credit card (automatic)" = "credit card")) +
                    labs(title="Payment method", x="Method", y="Percentage") +
                    theme(legend.position="top")
 
