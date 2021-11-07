@@ -1,0 +1,15 @@
+---
+title: "Telco Customer Churn Project"
+author: "Group7-Bug Tornado"
+#date: "today"
+date: "`r Sys.Date()`"
+# this style requires installing rmdformats package 
+output:  
+    rmdformats::readthedown:
+      toc_float: true
+      toc_depth: 3
+      number_sections: true
+      code_folding: hide
+      includes:
+        before_body: header.html
+---
