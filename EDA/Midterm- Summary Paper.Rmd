@@ -64,14 +64,15 @@ A brief overview of the dataset tells that there are 1869 customers left the tel
 churn <- subset(customer, Churn=="Yes")
 stay <- subset(customer, Churn=="No")
 summary(churn)
-xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, PhoneService, InternetService)), title="Churned Customer Attributes")
+xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, PhoneService, InternetService, PaperlessBilling)), title="Churned Customer Attributes")
 haveInt <- subset(churn, InternetService!="No")
 xkablesummary(subset(haveInt, select=c(OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport)))
 #summary(stay)
 
 ```
-Here we have picked out a few factors from the summary that have a significant difference between factor levels.  `r xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, PhoneService, InternetService)), title="Churned Customer Attributes")`
-We see that most churned customers are `senior citizens`. Indeed, the age limit can cause them to leave. From the table, we also see that most churned customers don't have a partner and have signed up for phone service. However, we cannot assume a direct reason at this time, so we'll talk about this later.  
+Here we have picked out a few factors from the summary that have a significant difference between factor levels.  `r xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, PhoneService, InternetService, PaperlessBilling)), title="Churned Customer Attributes")`
+We see that most churned customers are `senior citizens`. Indeed, the age limit can cause them to leave. From the table, we also see that most churned customers don't have a partner and have signed up for phone service and paperless billing. However, we cannot assume a direct reason at this time, so we'll talk about this later.  
 Customers who signed up for an internet service with `Fiber Optic` quit most. This may be because that they are not satisfied with Fiber Optic, but this speculation must be based on the assumption that total numbers of customers with Fiber Optic and DSL are nearly equal. From the summary, there are 2416 customers with DSL and 3096 customers with Fiber Optic, therefore, the speculation holds.  
 
-
+Then we want to look at churned customers who have signed up for Internet Services.  `r xkablesummary(subset(haveInt, select=c(OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport)), title="Attributes of Churned Customer with Internet Servies")`  
+Here we see significant impacts with these four internet service add-on. Most churned customers didn't sign up for these four add-on.
