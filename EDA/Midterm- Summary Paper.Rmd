@@ -67,6 +67,9 @@ customer <- na.omit(customer)
 sum(is.na(customer))
 ```
 
+```{r results=TRUE}
+str(customer)
+```
 * `gender`: Female or Male
 * `SeniorCitizen`: customer is a senior citizen or not (Yes, No)
 * `Partner`: customer has a partner or not (Yes, No)
