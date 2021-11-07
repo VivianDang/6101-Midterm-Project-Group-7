@@ -88,7 +88,7 @@ sum(is.na(customer))
 * `TotalCharges`: total amount charged
 * `Churn`: customer churned or not (Yes or No)
 
-For our exploratory data analysis, we did some preprocessing including cleaning up and converting. We dropped “NA” values from the dataset to simplify our analysis; we convert 'tenure', 'MonthlyCharges', 'TotalCharges' into factor variables. 
+For our exploratory data analysis, we did some preprocessing including cleaning up and converting. We dropped “NA” values from the dataset to simplify our analysis; we converted all variables into factor variables except `tenure`, `MonthlyCharges`, `TotalCharges`
 
 
 
