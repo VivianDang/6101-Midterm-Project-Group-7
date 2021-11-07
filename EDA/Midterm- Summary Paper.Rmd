@@ -1,5 +1,5 @@
 ---
-title: "Telco Customer Churn Project"
+title: "Telco Customer Churn Project: Summary Paper"
 author: "Group7-Bug Tornado"
 #date: "today"
 date: "`r Sys.Date()`"
@@ -13,3 +13,89 @@ output:
       includes:
         before_body: header.html
 ---
+
+```{r init, include=FALSE}
+# some of common options (and the defaults) are: 
+# include=T, eval=T, echo=T, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+library(ezids)
+library(ggplot2)
+library(ggpubr)
+# knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+knitr::opts_chunk$set(warning = F, results = "hide", message = F)
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
+# ‘scipen’: integer. A penalty to be applied when deciding to print numeric values in fixed or exponential notation.  Positive values bias towards fixed and negative towards scientific notation: fixed notation will be preferred unless it is more than ‘scipen’ digits wider.
+# use scipen=999 to prevent scientific notation at all times
+```
+
+# Chapter 1: Introudction of Company 
+## Basic Information
+Telco Systems is a company which have been working on design and development of high-performance network communications over 40 years. It is the global leader in telecommunications, providing excellent telecommunication service for customers. The service includes 5G internet, networking slicing, and more on. In our group, all of us have not tried to analyze such a company in telecommunication field. 
+
+## Reason of Choosing Telco Systems
+The reason of choosing this company is that Telco provides large amount of home phone service and internet service. These two stuffs are unavoidable in contemporary society. People get used to take mobile phones to go outside, and they adapt to such a life with internet. When people stay at home, they spend majority of times with interenet no matter working or playing. We can say that people cannot leave internet nowadays. Therefore, the company which is providing these services are pretty crucial. Telco is a good company, but it also has some drawbacks. Not all users satisfy with service, so we want to know in what place Telco can make an improvement. We care about how customers say about Telco, and what they dislike. We are here to help the company to find specific problems, to avoid unnecessary customers churn. Through analyzing the company, we wonder what factors Telco can improve to let customers have greater experiences of using. The best way to know the using experience is based on customers' survey. Therefore, we choose a dataset about customers survey. 
+
+# Chapter 2: Description of Dataset
+## About Dataset
+The Telco customer churn data contains information about Telco that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. Data includes customers' basic information and it indicates which customers have left, stayed, or signed up for their service.  
+Studying such data can help companies identify the characteristics of lost customers, identify potential, soon-to-be-lost customers and develop appropriate strategies to retain them.  
+The dataset is WA_Fn-UseC_-Telco-Customer-Churn.csv.
+Before analyzing this dataset, we did some research about what churn represents, and why it is important to avoid churn in business. Churn in this dataset represents lost customers. Some people will be curious about why the company should spend time on retaining current customers or decreasing lost customers. In fact, acquire a new customer is much harder than retaining an existing customer. Company can pay for fewer price to retain existing customers rather than spend large amount of money on advertisement, and it is a profound strategy to maintain good reputation. Therefore, it is crucial to figure out current problems, and then to fix it up. 
+
+## Variables
+
+```{r import, include=FALSE}
+customer <- data.frame(read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv"))
+str(customer)
+#head(customer)
+```
+
+```{r asfactor, include=FALSE}
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customer[,i] = factor(customer[,i])
+  }
+}
+levels(customer$SeniorCitizen) <- c("No", "Yes") # no=1, yes=2
+str(customer)
+```
+
+```{r cleanNA, include=FALSE}
+summary(customer)  # there are 11 NA in TotalCharges
+customer <- na.omit(customer)
+sum(is.na(customer))
+```
+
+* `gender`: Female or Male
+* `SeniorCitizen`: customer is a senior citizen or not (Yes, No)
+* `Partner`: customer has a partner or not (Yes, No)
+* `Dependents`: customer has dependents or not (Yes, No)
+* `tenure`: number of months the customer has stayed with the company
+* `PhoneService`: customer has a phone service or not (Yes, No)
+* `MultipleLines`: customer has multiple lines or not (Yes, No, No phone service)
+* `InternetService`: customer’s internet service provider (DSL, Fiber optic, No)
+* `OnlineSecurity`: customer has online security or not (Yes, No, No internet service)
+* `OnlineBackup`: customer has online backup or not (Yes, No, No internet service)
+* `DeviceProtection`: customer has device protection or not (Yes, No, No internet service)
+* `TechSupport`: customer has tech support or not (Yes, No, No internet service)
+* `StreamingTV`: customer has streaming TV or not (Yes, No, No internet service)
+* `StreamingMovies`: customer has streaming movies or not (Yes, No, No internet service)
+* `Contract`: contract term of the customer (Month-to-month, One year, Two year)
+* `PaperlessBilling`: customer has paperless billing or not (Yes, No)
+* `PaymentMethod`: Electronic check, Mailed check, Bank transfer (automatic), Credit card (automatic)
+* `MonthlyCharges`: amount charged monthly
+* `TotalCharges`: total amount charged
+* `Churn`: customer churned or not (Yes or No)
+
+For our exploratory data analysis, we did some preprocessing including cleaning up and converting. We dropped “NA” values from the dataset to simplify our analysis; we convert 'tenure', 'MonthlyCharges', 'TotalCharges' into factor variables. 
+
+
+
+
+
+
+
+
+
+
