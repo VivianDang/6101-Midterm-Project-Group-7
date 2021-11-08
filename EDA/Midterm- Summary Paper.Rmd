@@ -241,3 +241,217 @@ chi_test3 = chisq.test(churn_vs_bill)
 chi_test3
 ```
 Since p-value = `r format(chi_test3$p.value, scientific=T)` < 0.05, we reject null hypothesis, and `paperless bill` service has a significant impact on churn.  
+
+# Chapter 4: Continuous Variables EDA
+
+A brief overview of the dataset tells that there are 3 continuous variables, tenure, monthlycharges and totalcharges. 
+
+## kDE plot of continuous variables
+KDE plot is a Kernel Density Estimation Plot which depicts the probability density function of the continuous data variables. We can easily observe the distribution of samples with kde plot and when we want to compare the distributions of different samples, it won’t be affected by the samples' size.  
+```{r kdePlot}
+tenure_kdeplot <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
+            geom_density(aes(fill = Churn), alpha = 0.8) + 
+             scale_fill_manual(values=c("pink3", "steelblue")) +
+              labs(title="KDEplot for tenure") +
+               labs(x="tenure", y="density") +
+                theme(legend.position="top")
+tenure_kdeplot
+
+MonthlyCharges_kdeplot <- ggplot(data = customer, aes(x = MonthlyCharges, color = Churn)) + 
+                   geom_density(aes(fill = Churn), alpha = 0.8) + 
+                    scale_fill_manual(values=c("pink3", "steelblue")) +
+                     labs(title="KDEplot for MonthlyCharges") +
+                      labs(x="MonthlyCharges", y="density") +
+                       theme(legend.position="top")
+MonthlyCharges_kdeplot
+
+TotalCharges_kdeplot <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) + 
+                   geom_density(aes(fill = Churn), alpha = 0.8) + 
+                    scale_fill_manual(values=c("pink3", "steelblue")) +
+                     labs(title="KDEplot for TotalCharges") +
+                      labs(x="TotalCharges", y="density") +
+                       theme(legend.position="top")
+TotalCharges_kdeplot
+```
+
+As we can see from tenure_kdeplot, customers with lower `tenure` are more likely to churn. And from MonthlyCharges_kdeplot, customers with higher `monthlycharges` are also more likely to churn. From TotalCharges_kdeplot, we can find that churn customers and left customers have very similar distributions. From these 3 kde plots, which means, `tenure` may be negatively correlated with customer `churn` rates and `monthlycharges` may be positively correlated with customer `churn` rates. Finally, `totalcharges` may only make  a little attribution to customer `churn` rates.
+
+## Logistic regression 
+
+Logistic regression is the appropriate regression analysis to predict a binary outcome (the dependent variable) based on a set of independent variables.
+
+To verify the conclusion we drew from kde plots numerically, we use the logistic regression model to classify `churn` with different features.
+
+We can see from the anova test results. 
+```{r LogisticRegression,results = TRUE}
+lm1 <- glm(Churn~tenure, family = binomial(link = "logit"), data = customer)
+lm2 <- glm(Churn~tenure + MonthlyCharges, family = binomial(link = "logit"), data = customer)
+lm3 <- glm(Churn~tenure + MonthlyCharges + TotalCharges, family = binomial(link = "logit"), data = customer)
+anovat <- anova(lm1,lm2,lm3, test="LRT")
+anovat
+```
+model 2  is significantly better than model 1. However, model 3 is not under 99% significant level. Which means, model 3 may have not many improvements than model 2.
+
+## AUC and ROC Curve
+We can use AUC and ROC to measure model 2 and model 3. 
+AUC (Area Under The Curve) - ROC (Receiver Operating Characteristics) curve is a performance measurement for the classification problems at various threshold settings. ROC is a probability curve and AUC represents the degree or measure of separability. It tells how much the model is capable of distinguishing between classes. Higher the AUC, the better the model is at predicting 0 classes as 0 and 1 classes as 1. By analogy, the Higher the AUC, the better the model is at distinguishing between customer with left and churn.
+
+We can compare the ROC curves of two models.
+```{r AUClm2}
+prob <- predict(lm2,customer, type = c("response"))
+customer$prob <- prob
+library(pROC)
+require(hmeasure)
+g <- roc(Churn ~ prob, data = customer)
+plot(g)
+title("ROC curve of model 2")
+auc(customer$Churn, prob)
+```
+```{r AUClm3}
+prob1 <- predict(lm3,customer, type = c("response"))
+customer$prob <- prob1
+library(pROC)
+require(hmeasure)
+g1 <- roc(Churn ~ prob1, data = customer)
+plot(g1)
+title("ROC curve of model 3")
+auc(customer$Churn, prob1)
+```
+The two ROC curves are almost same. And the AUC of model 2 is `r auc(customer$Churn, prob)`, which means if we randomly choose a churn customer and a left customer, the probability of ranking churn customer higher than left customer is `r auc(customer$Churn, prob)`. AUC of model 3 is `r auc(customer$Churn, prob1)`.
+
+Therefore, `totalcharges` only makes a little attribution to improve the performance of the classification model. In the 3 continuous variables, we can dismiss the influence of `totalcharges` to customer `churn` rates.
+
+We can see the summary of model 2.
+```{r fitmodel,results=TRUE}
+xkabledply(lm2, title="summary of model 2")
+```
+In the 3 continuous variables, `tenure` has negative coefficients with `churn` and `monthlycharges` has positive coefficients with `churn`. It means when we have a customer with lower `tenure` and high `monthlycharges`, he has more probabilities to churn. And `totalcharges` is not significant influence factor to customer `churn` rates in 3 continuous variables.
+
+# Chapter 5: EDA with violinplots and scatterplots
+
+From the exploration of each of the above variables, it is known that some of the above variables have a significant effect on customer churn; and from the correlation coefficient plot, it is known that these variables are interrelated. Therefore, we choose to graph the groups of variables with relatively large correlation coefficients (i.e., the absolute value of correlation coefficient is greater than 0.4) one by one to explore how they affect the customer churn rate.
+
+## Will Total Charge influence the churn rate with other variables?
+
+```{r violinplot}
+library(patchwork)
+
+tc1 <- ggplot(customer,aes(x = MultipleLines , y = TotalCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("MultipleLines") + ylab("TotalCharges")
+
+tc2 <- ggplot(customer,aes(x = Contract , y = TotalCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Contract") + ylab("TotalCharges")
+
+#tc3 <- ggplot(customer,aes(x = tenure , y = TotalCharges , fill = Churn)) +
+#  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+#  xlab("Tenure") + ylab("TotalCharges")
+
+tc3 <- ggplot(customer, aes(x=tenure, y=TotalCharges, color=Churn)) +
+  geom_point(size=0.6,alpha=0.4)
+
+tc3/ (tc1+tc2) + plot_annotation(title = 'TotalCharges plot')
+```
+
+First, `tenure` and `totalcharge` show a positive correlation. However, except for the time when tenure is less than 20, customer churn rate is higher, and the distribution of customer churn samples in other stages is more dispersed.
+
+Second, for `Multiplelines`, the sample groups of No multiplelines and No phone service have higher churn rates when `totalcharge` is not high.
+
+Finally, for the sample group of month-to-month `contracts`, customers are also prone to churn when the `totalcharge` is low.
+
+## Will Monthly Charge influence the churn rate with other variables?
+
+```{r}
+#m1 <- ggplot(customer,aes(x = TotalCharges , y = MonthlyCharges , fill = Churn)) +
+#  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+#  xlab("TotalCharges") + ylab("MonthlyCharges")
+
+m1 <- ggplot(customer, aes(x=MonthlyCharges, y=TotalCharges, color=Churn)) +
+  geom_point(size=0.1,alpha=0.4)
+
+m2 <- ggplot(customer,aes(x = MultipleLines , y = MonthlyCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("MultipleLines") + ylab("MonthlyCharges")
+
+m1/m2 + plot_annotation(title = 'MonthlyCharges plot')
+```
+
+First, the first two sample groups with the lowest `MonthlyCharges` had low customer churn and a high number of customers. However, as `MonthlyCharges` increased after that, customer churn also started to increase, mainly concentrated when `TotalCharges` were still low.
+
+Second, the relationship between `MultipleLines` and `MonthlyCharges` leads to the following three conclusions.
+
+1. If the customers have no multiple lines service, they are likely to churn if their monthly charge are greater than 75 or between 30 and 50.
+
+2. If they have no phone service, we will find an interesting result that the more monthly charge they have, the less customer will churn.
+
+3. And if the customers have multiple lines service, they are like to churn when they have a monthly charge approximately greater than 70.
+
+## Will Tenure influence the churn rate with other variables?
+
+```{r}
+t1 <- ggplot(customer,aes(x = Partner , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Partner") + ylab("Tenure")
+
+t2 <- ggplot(customer,aes(x = Contract , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Contract") + ylab("Tenure")
+
+t3 <- ggplot(customer,aes(x = PaymentMethod , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("PaymentMethod") + ylab("Tenure")
+
+(t1+t2)/t3 + 
+  plot_annotation(title = 'Tenure violinplot')
+```
+
+First, the customers who have no `partner` and short `tenure` are more likely to churn.
+
+Second, the customers who have a month-to-month `contract` and short `tenure` are more likely to churn. Also, when they have long `tenure` and a 2-year `contract`, their possibility of churn is obviously increased.
+
+Finally, the `payment method` is also a factor. The customers who use electronic check or mailed check are more likely to churn if their `tenure` is short.
+
+## Will Contract influence the churn rate with other variables?
+
+Since the four services `OnlineSecurity`, `OnlineBackup`, `TechSupport` and `DeviceProtection` and the variable `contract` are categorical variables, a direct scatter plot can only see nine points in the two-dimensional plane. Therefore, we first numerate these categorical variables and then discretize their values (i.e., add random numbers to the numerical results so that the points are evenly dispersed in the two-dimensional plane).
+
+```{r}
+
+customerNum = customer
+# convert categorical variable as numeric for spearman method
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+#str(customerNum)
+
+contract_jitter <- customerNum$Contract*50 +runif(length(customerNum$Contract), -10, 10)
+OnlineSecurity_jitter <- customerNum$OnlineSecurity*50 +runif(length(customerNum$OnlineSecurity), -10, 10)
+c1 <- ggplot(customer, aes(x=contract_jitter, y=OnlineSecurity_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+TechSupport_jitter <- customerNum$TechSupport*50 +runif(length(customerNum$TechSupport), -10, 10)
+c2 <- ggplot(customer, aes(x=contract_jitter, y=TechSupport_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+OnlineBackupt_jitter <- customerNum$OnlineBackup*50 +runif(length(customerNum$OnlineBackup), -10, 10)
+c3 <- ggplot(customer, aes(x=contract_jitter, y=OnlineBackupt_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+DeviceProtection_jitter <- customerNum$DeviceProtection*50 +runif(length(customerNum$DeviceProtection), -10, 10)
+c4 <- ggplot(customer, aes(x=contract_jitter, y=DeviceProtection_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+(c1+c2)/(c3+c4)+plot_annotation(title = 'Contract Plot(wiht jittering)')
+```
+
+These 4 variables (`Online Security` & `Tech Support` & `Online Backup` & `Device Protection`) are probably influence, because we find that when customer do not have anyone of them, they are more likely to churn if they have a month-to-month `contract`, except `Device Protectio`n. The result shows that there are many people have `Device Protection` and month-to-month `contract` but still churn, even though the amount of these customers is less than the one who have no `Device Protection`.
+
+# Chapter 6: Conclusion
+
+In the EDA phase we have basically explored our first SMART question, i.e. which of the above variables are the ones that have a significant impact on customer churn. Through these analysis processes, it is easy to find that customers prone to `churn` have the following characteristics: Month-to-Month `contracts`, no `Phone service` or no `MultipleLines` service, no `Partner`, which can also show that these customers have a low dependency on the operator and a low cost to leave, economically interpreted as sunk The cost is low. At the same time, most of them choose the `Payment Method` of Electronic check and Mailed check, which indicates that they may be some customers with conservative consumption habits, and combined with the characteristic that most customers are more likely to churn when `Totalcharge` is higher, these customers may be dissatisfied with the existing carrier charges and thus choose to leave. . In addition, for customers who demand higher quality of service, the absence of any of `OnlineSecurity`, `OnlineBackup`, `TechSupport` and `DeviceProtection` may make them less satisfied with the existing service, thus increasing their probability of churning to some extent.
+
+In the process of the above analysis, we have basically completed the summary of the characteristics of churn-prone customers. In the next analysis, we will focus on quantifying the degree of influence of the above variables on customer churn (SMART question 2), as well as analyzing which users are imminent churners based on the model we constructed (SMART question 3). We plan to train some classification models to complete the third question. The final results will be presented in our final project.
