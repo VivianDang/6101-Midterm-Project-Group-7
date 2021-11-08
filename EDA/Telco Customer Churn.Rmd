@@ -259,7 +259,7 @@ prob <- predict(lm2,customer, type = c("response"))
 customer$prob <- prob
 library(pROC)
 g <- roc(Churn ~ prob, data = customer)
-plot(g)
+plot(g, main = "ROC curve of model 2")
 auc(customer$Churn, prob)
 ```
 
@@ -268,7 +268,7 @@ prob1 <- predict(lm3,customer, type = c("response"))
 customer$prob <- prob1
 library(pROC)
 g1 <- roc(Churn ~ prob1, data = customer)
-plot(g1)
+plot(g1,main = "ROC curve of model 3")
 auc(customer$Churn, prob1)
 ```
 AUC (Area Under The Curve) - ROC (Receiver Operating Characteristics) curve is a performance measurement for the classification problems at various threshold settings. ROC is a probability curve and AUC represents the degree or measure of separability. It tells how much the model is capable of distinguishing between classes. Higher the AUC, the better the model is at predicting 0 classes as 0 and 1 classes as 1. By analogy, the Higher the AUC, the better the model is at distinguishing between customer with churn and no churn.
