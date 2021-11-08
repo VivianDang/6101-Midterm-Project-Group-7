@@ -273,7 +273,8 @@ TotalCharges_kdeplot <- ggplot(data = customer, aes(x = TotalCharges, color = Ch
                        theme(legend.position="top")
 TotalCharges_kdeplot
 ```
-As we can see from `tenure_kdeplot`, customers with lower `tenure` are more likely to churn. And from `MonthlyCharges_kdeplot`, customers with higher `monthlycharges` are also more likely to churn. From `TotalCharges_kdeplot`, we can find that churn customers and left customers have very similar distributions. From these 3 kde plots, which means, `tenure` may be negatively correlated with customer `churn rates` and `monthlycharges` may be positively correlated with customer `churn rates`. Finally, `totalcharges` may only make  a little attribution to customer `churn rates`.
+
+As we can see from tenure_kdeplot, customers with lower `tenure` are more likely to churn. And from MonthlyCharges_kdeplot, customers with higher `monthlycharges` are also more likely to churn. From TotalCharges_kdeplot, we can find that churn customers and left customers have very similar distributions. From these 3 kde plots, which means, `tenure` may be negatively correlated with customer `churn` rates and `monthlycharges` may be positively correlated with customer `churn` rates. Finally, `totalcharges` may only make  a little attribution to customer `churn` rates.
 
 ## Logistic regression 
 
@@ -289,10 +290,10 @@ lm3 <- glm(Churn~tenure + MonthlyCharges + TotalCharges, family = binomial(link 
 anovat <- anova(lm1,lm2,lm3, test="LRT")
 anovat
 ```
-`model 2`  is significantly better than `model 1`. However, `model 3` is not under 99% significant level. Which means, `model 3` may have not many improvements than `model 2`.
+model 2  is significantly better than model 1. However, model 3 is not under 99% significant level. Which means, model 3 may have not many improvements than model 2.
 
 ## AUC and ROC Curve
-We can use AUC and ROC to measure `model 2` and `model 3`. 
+We can use AUC and ROC to measure model 2 and model 3. 
 AUC (Area Under The Curve) - ROC (Receiver Operating Characteristics) curve is a performance measurement for the classification problems at various threshold settings. ROC is a probability curve and AUC represents the degree or measure of separability. It tells how much the model is capable of distinguishing between classes. Higher the AUC, the better the model is at predicting 0 classes as 0 and 1 classes as 1. By analogy, the Higher the AUC, the better the model is at distinguishing between customer with left and churn.
 
 We can compare the ROC curves of two models.
@@ -316,15 +317,15 @@ plot(g1)
 title("ROC curve of model 3")
 auc(customer$Churn, prob1)
 ```
-The two ROC curves are almost same. And the AUC of `model 2` is `r auc(customer$Churn, prob)`, which means if we randomly choose a churn customer and a left customer, the probability of ranking churn customer higher than left customer is `r auc(customer$Churn, prob)`. AUC of `model 3` is `r auc(customer$Churn, prob1)`.
+The two ROC curves are almost same. And the AUC of model 2 is `r auc(customer$Churn, prob)`, which means if we randomly choose a churn customer and a left customer, the probability of ranking churn customer higher than left customer is `r auc(customer$Churn, prob)`. AUC of model 3 is `r auc(customer$Churn, prob1)`.
 
-Therefore, `totalcharges` only makes a little attribution to improve the performance of the classification model. In the 3 continuous variables, we can dismiss the influence of `totalcharges` to customer `churn rates`.
+Therefore, `totalcharges` only makes a little attribution to improve the performance of the classification model. In the 3 continuous variables, we can dismiss the influence of `totalcharges` to customer `churn` rates.
 
-We can see the summary of `model 2`.
+We can see the summary of model 2.
 ```{r fitmodel,results=TRUE}
 xkabledply(lm2, title="summary of model 2")
 ```
-In the 3 continuous variables, `tenure` has negative coefficients with `churn` and `monthlycharges` has positive coefficients with `churn`. It means when we have a customer with lower `tenure` and high `monthlycharges`, he has more probabilities to churn. And `totalcharges` is not significant influence factor to customer `churn rates` in 3 continuous variables.
+In the 3 continuous variables, `tenure` has negative coefficients with `churn` and `monthlycharges` has positive coefficients with `churn`. It means when we have a customer with lower `tenure` and high `monthlycharges`, he has more probabilities to churn. And `totalcharges` is not significant influence factor to customer `churn` rates in 3 continuous variables.
 
 # Chapter 5: EDA with violinplots and scatterplots
 
