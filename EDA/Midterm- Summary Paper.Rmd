@@ -21,7 +21,7 @@ library(ezids)
 library(ggplot2)
 library(ggpubr)
 # knitr::opts_chunk$set(warning = F, results = "markup", message = F)
-knitr::opts_chunk$set(warning = F, results = "hide", message = F)
+knitr::opts_chunk$set(warning = F, results = "hide", message = F, echo = F)
 options(scientific=T, digits = 3) 
 # options(scipen=9, digits = 3) 
 # ‘scipen’: integer. A penalty to be applied when deciding to print numeric values in fixed or exponential notation.  Positive values bias towards fixed and negative towards scientific notation: fixed notation will be preferred unless it is more than ‘scipen’ digits wider.
@@ -88,13 +88,10 @@ sum(is.na(customer))
 * `TotalCharges`: total amount charged
 * `Churn`: customer churned or not (Yes or No)
 
-For our exploratory data analysis, we did some preprocessing including cleaning up and converting. We dropped “NA” values from the dataset to simplify our analysis; we convert 'tenure', 'MonthlyCharges', 'TotalCharges' into factor variables. 
+For our exploratory data analysis, we did some preprocessing including cleaning up and converting. We dropped “NA” values from the dataset to simplify our analysis; we convert `tenure`, `MonthlyCharges`, `TotalCharges` into factor variables. 
 
 # Chapter 3: Categorical Variables EDA  
 
-```{r}
-summary(customer)
-```
 A brief overview of the dataset tells that there are 1869 customers left the telephone service company and 5163 who didn't. Below we'll call these left customers as churned customers.  
 
 ## Churn vs Not Churn
@@ -104,15 +101,140 @@ A brief overview of the dataset tells that there are 1869 customers left the tel
 churn <- subset(customer, Churn=="Yes")
 stay <- subset(customer, Churn=="No")
 summary(churn)
-xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, PhoneService, InternetService, PaperlessBilling)), title="Churned Customer Attributes")
+```
+```{r, include=FALSE}
+xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, Dependents, PhoneService, InternetService, PaperlessBilling)), title="Churned Customer Attributes")
 haveInt <- subset(churn, InternetService!="No")
 xkablesummary(subset(haveInt, select=c(OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport)))
-#summary(stay)
-
+xkablesummary(subset(churn, select=c(Contract, PaymentMethod)), title="Churned Customer Attributes2")
 ```
-Here we have picked out a few factors from the summary that have a significant difference between factor levels.  `r xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, PhoneService, InternetService, PaperlessBilling)), title="Churned Customer Attributes")`
-We see that most churned customers are `senior citizens`. Indeed, the age limit can cause them to leave. From the table, we also see that most churned customers don't have a partner and have signed up for phone service and paperless billing. However, we cannot assume a direct reason at this time, so we'll talk about this later.  
+Here we have picked out a few factors from the summary that have a significant difference between factor levels.  `r xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, Dependents, PhoneService, InternetService, PaperlessBilling)), title="Churned Customer Attributes")`
+We see that most churned customers are `senior citizens`. Indeed, the age limit can cause them to leave. Also most churned customers have `no dependents`, which means they may be older and have their own considerations about choosing a phone company. From the table, we also see that most churned customers don't have a partner and have signed up for phone service and paperless billing. However, we cannot assume a direct reason at this time, so we'll talk about this later.  
 Customers who signed up for an internet service with `Fiber Optic` quit most. This may be because that they are not satisfied with Fiber Optic, but this speculation must be based on the assumption that total numbers of customers with Fiber Optic and DSL are nearly equal. From the summary, there are 2416 customers with DSL and 3096 customers with Fiber Optic, therefore, the speculation holds.  
 
-Then we want to look at churned customers who have signed up for Internet Services.  `r xkablesummary(subset(haveInt, select=c(OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport)), title="Attributes of Churned Customer with Internet Servies")`  
-Here we see significant impacts with these four internet service add-on. Most churned customers didn't sign up for these four add-on.
+Then we want to take a deeper look into churned customers who have signed up for Internet Services.  `r xkablesummary(subset(haveInt, select=c(OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport)), title="Attributes of Churned Customer with Internet Servies")`  
+Here we see significant impacts with these four internet service add-on. Most churned customers didn't sign up for these four add-on.  
+
+Now let's look at the `contract` and `payment method`.  
+`r xkablesummary(subset(churn, select=c(Contract, PaymentMethod)), title="Churned Customer Attributes2")`
+Most churned customers have short-term(month-to-month) contract and paid bills with electronic check.  
+
+### Contrast Churned with not Churned  
+Since the sample sizes of churned and not churned customers are different, we can't compare the numbers of customers directly for each attributes. Instead, we compare the percentage.  
+Here we see the factors that have a significant impact on customer churn or not. Just as we mentioned earlier, these factors also characterize most churned customers.  
+```{r, include=FALSE}
+haveIntAll <- subset(customer, InternetService!="No")
+```
+```{r}
+senior <- ggplot(customer, aes(x=SeniorCitizen, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Not senior", "Yes" = "Senior")) +
+                   labs(title="SeniorCitizen", x="", y="Percentage") +
+                   theme(legend.position="top")
+partner <- ggplot(customer, aes(x=Partner, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no partner", "Yes" = "Have a partner")) +
+                   labs(title="Partner", x="", y="Percentage") +
+                   theme(legend.position="top")
+dependent <- ggplot(customer, aes(x=Dependents, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no dependents", "Yes" = "Have dependents")) +
+                   labs(title="Dependent", x="", y="Percentage") +
+                   theme(legend.position="top")
+internet_service <- ggplot(customer, aes(x=InternetService, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Internet services", x="Internet company", y="Percentage") +
+                   theme(legend.position="top")
+online_security <- ggplot(haveIntAll, aes(x=OnlineSecurity, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Online security", x="", y="Percentage") +
+                   theme(legend.position="top")
+online_backup <- ggplot(haveIntAll, aes(x=OnlineBackup, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Online backup", x="", y="Percentage") +
+                   theme(legend.position="top")
+device_protection <- ggplot(haveIntAll, aes(x=DeviceProtection, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Device protection", x="", y="Percentage") +
+                   theme(legend.position="top")
+tech_support <- ggplot(haveIntAll, aes(x=TechSupport, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Tech support", x="", y="Percentage") +
+                   theme(legend.position="top")
+contract <- ggplot(customer, aes(x=Contract, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Contract", x="Method", y="Percentage") +
+                   theme(legend.position="top")
+paperless_billing <- ggplot(customer, aes(x=PaperlessBilling, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "No paperless billing", "Yes" = "Have paperless billing")) +
+                   labs(title="Paperless billing", x="", y="Percentage") +
+                   theme(legend.position="top")
+payment_method <- ggplot(customer, aes(x=PaymentMethod, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("Bank transfer (automatic)" = "bank transfer", "Electronic check" = "E-check", "Credit card (automatic)" = "credit card")) +
+                   labs(title="Payment method", x="Method", y="Percentage") +
+                   theme(legend.position="top")
+ggarrange(senior, partner, dependent, paperless_billing)
+ggarrange(internet_service, online_security, online_backup, device_protection, tech_support)
+ggarrange(contract, payment_method, nrow=2, ncol=1)
+```
+Remember we previously talked about the partner, phone service and paperless bill, which we are unsure why they have an impact on customer churn, they also create differences between churned and not churned customers. Let's find out whether these factors have significant impacts on churn with tests.  
+
+## Chi-square Tests  
+We use $\chi^2$ test to test if two categorical variables are independent base on contingency table.  
+
+### Test Partner  
+
+```{r}
+churn_vs_partner = table(customer$Churn, customer$Partner)
+```
+Are they independent?  
+- $H_0$: churn and partner are independent.  
+- $H_1$: they are not independent. 
+```{r, results='markup'}
+chi_test1 = chisq.test(churn_vs_partner)
+chi_test1
+```
+Since p-value = `r format(chi_test1$p.value, scientific=T)` < 0.05, we reject null hypothesis, so `partner` actually has a significant impact on churn.  
+
+### Test PhoneService  
+
+```{r}
+churn_vs_phone = table(customer$Churn, customer$PhoneService)
+churn_vs_phone
+```
+Are they independent?  
+- $H_0$: churn and phone service are independent.  
+- $H_1$: they are not independent. 
+```{r, results='markup'}
+chi_test2 = chisq.test(churn_vs_phone)
+chi_test2
+```
+Since p-value = `r format(chi_test2$p.value, scientific=F)` > 0.05, we fail to reject null hypothesis, so `phone service` does not have a significant impact on churn.  
+
+### Test PaperlessBilling  
+
+```{r}
+churn_vs_bill = table(customer$Churn, customer$PaperlessBilling)
+churn_vs_bill
+```
+Are they independent?  
+- $H_0$: churn and paperless bill are independent.  
+- $H_1$: they are not independent. 
+```{r, results='markup'}
+chi_test3 = chisq.test(churn_vs_bill)
+chi_test3
+```
+Since p-value = `r format(chi_test3$p.value, scientific=T)` < 0.05, we reject null hypothesis, and `paperless bill` service has a significant impact on churn.  
