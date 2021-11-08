@@ -246,7 +246,7 @@ Since p-value = `r format(chi_test3$p.value, scientific=T)` < 0.05, we reject nu
 
 A brief overview of the dataset tells that there are 3 continuous variables, tenure, monthlycharges and totalcharges. 
 
-## kDE plot of continuous variables
+## KDE plot of continuous variables
 KDE plot is a Kernel Density Estimation Plot which depicts the probability density function of the continuous data variables. We can easily observe the distribution of samples with kde plot and when we want to compare the distributions of different samples, it won’t be affected by the samples' size.  
 ```{r kdePlot}
 tenure_kdeplot <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
@@ -301,20 +301,16 @@ We can compare the ROC curves of two models.
 prob <- predict(lm2,customer, type = c("response"))
 customer$prob <- prob
 library(pROC)
-require(hmeasure)
 g <- roc(Churn ~ prob, data = customer)
-plot(g)
-title("ROC curve of model 2")
+plot(g, main = "ROC curve of model 2")
 auc(customer$Churn, prob)
 ```
 ```{r AUClm3}
 prob1 <- predict(lm3,customer, type = c("response"))
 customer$prob <- prob1
 library(pROC)
-require(hmeasure)
 g1 <- roc(Churn ~ prob1, data = customer)
-plot(g1)
-title("ROC curve of model 3")
+plot(g1, main = "ROC curve of model 2")
 auc(customer$Churn, prob1)
 ```
 The two ROC curves are almost same. And the AUC of model 2 is `r auc(customer$Churn, prob)`, which means if we randomly choose a churn customer and a left customer, the probability of ranking churn customer higher than left customer is `r auc(customer$Churn, prob)`. AUC of model 3 is `r auc(customer$Churn, prob1)`.
