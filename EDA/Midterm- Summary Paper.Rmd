@@ -241,3 +241,132 @@ chi_test3 = chisq.test(churn_vs_bill)
 chi_test3
 ```
 Since p-value = `r format(chi_test3$p.value, scientific=T)` < 0.05, we reject null hypothesis, and `paperless bill` service has a significant impact on churn.  
+
+# Chapter 4: EDA with violinplots and scatterplots
+
+From the exploration of each of the above variables, it is known that some of the above variables have a significant effect on customer churn; and from the correlation coefficient plot, it is known that these variables are interrelated. Therefore, we choose to graph the groups of variables with relatively large correlation coefficients (i.e., the absolute value of correlation coefficient is greater than 0.4) one by one to explore how they affect the customer churn rate.
+
+## Will Total Charge influence the churn rate with other variables?
+
+```{r violinplot}
+library(patchwork)
+
+tc1 <- ggplot(customer,aes(x = MultipleLines , y = TotalCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("MultipleLines") + ylab("TotalCharges")
+
+tc2 <- ggplot(customer,aes(x = Contract , y = TotalCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Contract") + ylab("TotalCharges")
+
+#tc3 <- ggplot(customer,aes(x = tenure , y = TotalCharges , fill = Churn)) +
+#  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+#  xlab("Tenure") + ylab("TotalCharges")
+
+tc3 <- ggplot(customer, aes(x=tenure, y=TotalCharges, color=Churn)) +
+  geom_point(size=0.6,alpha=0.4)
+
+tc3/ (tc1+tc2) + plot_annotation(title = 'TotalCharges plot')
+```
+
+First, `tenure` and `totalcharge` show a positive correlation. However, except for the time when tenure is less than 20, customer churn rate is higher, and the distribution of customer churn samples in other stages is more dispersed.
+
+Second, for `Multiplelines`, the sample groups of No multiplelines and No phone service have higher churn rates when `totalcharge` is not high.
+
+Finally, for the sample group of month-to-month `contracts`, customers are also prone to churn when the `totalcharge` is low.
+
+## Will Monthly Charge influence the churn rate with other variables?
+
+```{r}
+#m1 <- ggplot(customer,aes(x = TotalCharges , y = MonthlyCharges , fill = Churn)) +
+#  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+#  xlab("TotalCharges") + ylab("MonthlyCharges")
+
+m1 <- ggplot(customer, aes(x=MonthlyCharges, y=TotalCharges, color=Churn)) +
+  geom_point(size=0.1,alpha=0.4)
+
+m2 <- ggplot(customer,aes(x = MultipleLines , y = MonthlyCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("MultipleLines") + ylab("MonthlyCharges")
+
+m1/m2 + plot_annotation(title = 'MonthlyCharges plot')
+```
+
+First, the first two sample groups with the lowest `MonthlyCharges` had low customer churn and a high number of customers. However, as `MonthlyCharges` increased after that, customer churn also started to increase, mainly concentrated when `TotalCharges` were still low.
+
+Second, the relationship between `MultipleLines` and `MonthlyCharges` leads to the following three conclusions.
+
+1. If the customers have no multiple lines service, they are likely to churn if their monthly charge are greater than 75 or between 30 and 50.
+
+2. If they have no phone service, we will find an interesting result that the more monthly charge they have, the less customer will churn.
+
+3. And if the customers have multiple lines service, they are like to churn when they have a monthly charge approximately greater than 70.
+
+## Will Tenure influence the churn rate with other variables?
+
+```{r}
+t1 <- ggplot(customer,aes(x = Partner , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Partner") + ylab("Tenure")
+
+t2 <- ggplot(customer,aes(x = Contract , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Contract") + ylab("Tenure")
+
+t3 <- ggplot(customer,aes(x = PaymentMethod , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("PaymentMethod") + ylab("Tenure")
+
+(t1+t2)/t3 + 
+  plot_annotation(title = 'Tenure violinplot')
+```
+
+First, the customers who have no `partner` and short `tenure` are more likely to churn.
+
+Second, the customers who have a month-to-month `contract` and short `tenure` are more likely to churn. Also, when they have long `tenure` and a 2-year `contract`, their possibility of churn is obviously increased.
+
+Finally, the `payment method` is also a factor. The customers who use electronic check or mailed check are more likely to churn if their `tenure` is short.
+
+## Will Contract influence the churn rate with other variables?
+
+Since the four services `OnlineSecurity`, `OnlineBackup`, `TechSupport` and `DeviceProtection` and the variable `contract` are categorical variables, a direct scatter plot can only see nine points in the two-dimensional plane. Therefore, we first numerate these categorical variables and then discretize their values (i.e., add random numbers to the numerical results so that the points are evenly dispersed in the two-dimensional plane).
+
+```{r}
+
+customerNum = customer
+# convert categorical variable as numeric for spearman method
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+#str(customerNum)
+
+contract_jitter <- customerNum$Contract*50 +runif(length(customerNum$Contract), -10, 10)
+OnlineSecurity_jitter <- customerNum$OnlineSecurity*50 +runif(length(customerNum$OnlineSecurity), -10, 10)
+c1 <- ggplot(customer, aes(x=contract_jitter, y=OnlineSecurity_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+TechSupport_jitter <- customerNum$TechSupport*50 +runif(length(customerNum$TechSupport), -10, 10)
+c2 <- ggplot(customer, aes(x=contract_jitter, y=TechSupport_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+OnlineBackupt_jitter <- customerNum$OnlineBackup*50 +runif(length(customerNum$OnlineBackup), -10, 10)
+c3 <- ggplot(customer, aes(x=contract_jitter, y=OnlineBackupt_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+DeviceProtection_jitter <- customerNum$DeviceProtection*50 +runif(length(customerNum$DeviceProtection), -10, 10)
+c4 <- ggplot(customer, aes(x=contract_jitter, y=DeviceProtection_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+(c1+c2)/(c3+c4)+plot_annotation(title = 'Contract Plot(wiht jittering)')
+```
+
+These 4 variables (`Online Security` & `Tech Support` & `Online Backup` & `Device Protection`) are probably influence, because we find that when customer do not have anyone of them, they are more likely to churn if they have a month-to-month `contract`, except `Device Protectio`n. The result shows that there are many people have `Device Protection` and month-to-month `contract` but still churn, even though the amount of these customers is less than the one who have no `Device Protection`.
+
+# Chapter 5: Conclusion
+
+In the EDA phase we have basically explored our first SMART question, i.e. which of the above variables are the ones that have a significant impact on customer churn. Through these analysis processes, it is easy to find that customers prone to `churn` have the following characteristics: Month-to-Month `contracts`, no `Phone service` or no `MultipleLines` service, no `Partner`, which can also show that these customers have a low dependency on the operator and a low cost to leave, economically interpreted as sunk The cost is low. At the same time, most of them choose the `Payment Method` of Electronic check and Mailed check, which indicates that they may be some customers with conservative consumption habits, and combined with the characteristic that most customers are more likely to churn when `Totalcharge` is higher, these customers may be dissatisfied with the existing carrier charges and thus choose to leave. . In addition, for customers who demand higher quality of service, the absence of any of `OnlineSecurity`, `OnlineBackup`, `TechSupport` and `DeviceProtection` may make them less satisfied with the existing service, thus increasing their probability of churning to some extent.
+
+In the process of the above analysis, we have basically completed the summary of the characteristics of churn-prone customers. In the next analysis, we will focus on quantifying the degree of influence of the above variables on customer churn (SMART question 2), as well as analyzing which users are imminent churners based on the model we constructed (SMART question 3). We plan to train some classification models to complete the third question. The final results will be presented in our final project.
