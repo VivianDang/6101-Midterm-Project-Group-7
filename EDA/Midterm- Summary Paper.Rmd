@@ -323,7 +323,7 @@ xkabledply(lm2, title="summary of model 2")
 ```
 In the 3 continuous variables, `tenure` has negative coefficients with `churn` and `monthlycharges` has positive coefficients with `churn`. It means when we have a customer with lower `tenure` and high `monthlycharges`, he has more probabilities to churn. And `totalcharges` is not significant influence factor to customer `churn` rates in 3 continuous variables.
 
-# Chapter 5: EDA with violinplots and scatterplots
+# Chapter 5: EDA on the joint effect of influencing factors
 
 From the exploration of each of the above variables, it is known that some of the above variables have a significant effect on customer churn; and from the correlation coefficient plot, it is known that these variables are interrelated. Therefore, we choose to graph the groups of variables with relatively large correlation coefficients (i.e., the absolute value of correlation coefficient is greater than 0.4) one by one to explore how they affect the customer churn rate.
 
