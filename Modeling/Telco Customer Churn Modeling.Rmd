@@ -230,7 +230,6 @@ customer$prob=prob
 h = roc(Churn~prob, data=customer)
 auc(h) 
 plot(h)
-
 ```
 We have here the area-under-curve of `r auc(h)`, which is greater than 0.8. The model is considered a good fit.
 
@@ -240,4 +239,4 @@ ChurnLogitpr2 = pR2(logistic_7)
 ChurnLogitpr2
 unloadPkg("pscl") 
 ```
-With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 28.5% of the variations in y is explained by the explanatory variables in the model. 
+With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 27.8% of the variations in y is explained by the explanatory variables in the model. 
