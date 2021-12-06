@@ -79,3 +79,77 @@ summary(customer)  # there are 11 NA in TotalCharges
 customer <- na.omit(customer)
 sum(is.na(customer))
 ```
+
+```{r 1.1Logistic Regression}
+logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_all)
+xkabledply(logistic_all)
+
+
+```
+```{r 1.2Logistic Regression}
+logistic_1 = glm(Churn ~ SeniorCitizen + Dependents + tenure + MultipleLines + InternetService
+                         + StreamingTV + StreamingMovies + Contract + PaperlessBilling + TotalCharges, 
+                         data = customer, family = 'binomial')
+summary(logistic_1)
+xkabledply(logistic_1)
+
+
+```
+```{r exp}
+expcoeff1 = exp(coef(logistic_1))
+summary(expcoeff1)
+xkabledply( as.table(expcoeff1), title = "Exponential of coefficients in Churn" )
+
+```
+
+#### Confusion matrix 
+```{r Q7.confusionMatrix, results='markup'}
+loadPkg("regclass")
+confusion_matrix(logistic_1)
+xkabledply( confusion_matrix(logistic_1), title = "Confusion matrix from Logit Model" )
+unloadPkg("regclass")
+```
+```{r Q7.confusion matrix, results=T}
+loadPkg("regclass")
+cfmatrix1 = confusion_matrix(logistic_1)
+accuracy1 <- (cfmatrix1[1,1]+cfmatrix1[2,2])/cfmatrix1[3,3]
+precision1 <- cfmatrix1[2,2]/(cfmatrix1[2,2]+cfmatrix1[1,2])
+recall1 <- cfmatrix1[2,2]/(cfmatrix1[2,2]+cfmatrix1[2,1])
+specificity1 <- cfmatrix1[1,1]/(cfmatrix1[1,1]+cfmatrix1[1,2])
+F1_score1 <- 2*(precision1)*(recall1)/(precision1 + recall1)
+accuracy1
+precision1
+recall1
+specificity1
+F1_score1
+```
+From confusion matrix, we can conclude that 
+Accuracy =`r accuracy1`
+Precision=`r precision1`
+Recall=`r recall1`
+Specificity=`r specificity1`
+F1 score=`r F1_score1`
+
+```{r Q7.roc_auc, results=T}
+loadPkg("pROC") 
+prob=predict(logistic_1, type = "response" )
+customer$prob=prob
+h = roc(Churn~prob, data=customer)
+auc(h) 
+plot(h)
+
+```
+
+
+```{r Q7.McFadden, results=T}
+loadPkg("pscl")
+ChurnLogitpr2 = pR2(logistic_1)
+ChurnLogitpr2
+unloadPkg("pscl") 
+```
+With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 27.4% of the variations in y is explained by the explanatory variables in the model. 
