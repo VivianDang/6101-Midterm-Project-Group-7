@@ -1,0 +1,220 @@
+---
+title: "Telco Customer Churn Project"
+author: "Group7-Bug Tornado"
+#date: "today"
+date: "`r Sys.Date()`"
+# this style requires installing rmdformats package 
+output:  
+    rmdformats::readthedown:
+      toc_float: true
+      toc_depth: 3
+      number_sections: true
+      code_folding: hide
+      includes:
+        before_body: header.html
+---
+
+```{r init, include=FALSE}
+# some of common options (and the defaults) are: 
+# include=T, eval=T, echo=T, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+library(ezids)
+library(ggplot2)
+library(ggpubr)
+# knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+knitr::opts_chunk$set(warning = F, results = "hide", message = F)
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
+# ‘scipen’: integer. A penalty to be applied when deciding to print numeric values in fixed or exponential notation.  Positive values bias towards fixed and negative towards scientific notation: fixed notation will be preferred unless it is more than ‘scipen’ digits wider.
+# use scipen=999 to prevent scientific notation at all times
+```
+
+# Telco Customer Churn
+## Description
+The Telco customer churn data contains information about a telephone company that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. It indicates which customers have left, stayed, or signed up for their service.  
+Studying such data can help companies identify the characteristics of lost customers, identify potential, soon-to-be-lost customers and develop appropriate strategies to retain them.  
+The dataset is WA_Fn-UseC_-Telco-Customer-Churn.csv.  
+
+### variables
+
+* `gender`: Female or Male
+* `SeniorCitizen`: customer is a senior citizen or not (Yes, No)
+* `Partner`: customer has a partner or not (Yes, No)
+* `Dependents`: customer has dependents or not (Yes, No)
+* `tenure`: number of months the customer has stayed with the company
+* `PhoneService`: customer has a phone service or not (Yes, No)
+* `MultipleLines`: customer has multiple lines or not (Yes, No, No phone service)
+* `InternetService`: customer’s internet service provider (DSL, Fiber optic, No)
+* `OnlineSecurity`: customer has online security or not (Yes, No, No internet service)
+* `OnlineBackup`: customer has online backup or not (Yes, No, No internet service)
+* `DeviceProtection`: customer has device protection or not (Yes, No, No internet service)
+* `TechSupport`: customer has tech support or not (Yes, No, No internet service)
+* `StreamingTV`: customer has streaming TV or not (Yes, No, No internet service)
+* `StreamingMovies`: customer has streaming movies or not (Yes, No, No internet service)
+* `Contract`: contract term of the customer (Month-to-month, One year, Two year)
+* `PaperlessBilling`: customer has paperless billing or not (Yes, No)
+* `PaymentMethod`: Electronic check, Mailed check, Bank transfer (automatic), Credit card (automatic)
+* `MonthlyCharges`: amount charged monthly
+* `TotalCharges`: total amount charged
+* `Churn`: customer churned or not (Yes or No)
+
+```{r import, include=FALSE}
+customer <- data.frame(read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv"))
+str(customer)
+head(customer)
+```
+
+```{r asfactor, include=FALSE}
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customer[,i] = factor(customer[,i])
+  }
+}
+levels(customer$SeniorCitizen) <- c("No", "Yes") # no=1, yes=2
+str(customer)
+```
+
+```{r cleanNA, include=FALSE}
+summary(customer)  # there are 11 NA in TotalCharges
+customer <- na.omit(customer)
+sum(is.na(customer))
+```
+
+
+#### Classification Tree
+
+```{r}
+customerNum = customer
+# convert categorical variable as numeric 
+for(i in 2:20){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+customerNum <- subset(customerNum, select = -customerID)
+```
+
+
+
+```{r Classification Tree feature selection}
+library(randomForest)
+fit_im = randomForest(customerNum$Churn~., data=customerNum)
+# Create an importance based on mean decreasing gini
+importance(fit_im)
+varImpPlot(fit_im)
+```
+
+From the sorted importance picture, we can select the top 6 features to build the tree model.  
+
+
+Then, firstly, try to find the best depths.
+
+```{r Classification Tree depths result}
+loadPkg("rpart")
+loadPkg("caret")
+
+
+
+# create an empty dataframe to store the results from confusion matrices
+confusionMatrixResultDf = data.frame( Depth=numeric(0), Accuracy= numeric(0), Sensitivity=numeric(0), Specificity=numeric(0), Pos.Pred.Value=numeric(0), Neg.Pred.Value=numeric(0), Precision=numeric(0), Recall=numeric(0), F1=numeric(0), Prevalence=numeric(0), Detection.Rate=numeric(0), Detection.Prevalence=numeric(0), Balanced.Accuracy=numeric(0), row.names = NULL )
+
+for (deep in 2:8) {
+  kfit <- rpart(Churn ~ TotalCharges + MonthlyCharges + tenure + Contract +  OnlineSecurity + PaymentMethod, data=customerNum, method="class", control = list(maxdepth = deep) )
+  # 
+  cm = confusionMatrix( predict(kfit, type = "class"), reference = customerNum[, "Churn"] ) # from caret library
+  # 
+  cmaccu = cm$overall['Accuracy']
+  # print( paste("Total Accuracy = ", cmaccu ) )
+  # 
+  cmt = data.frame(Depth=deep, Accuracy = cmaccu, row.names = NULL ) # initialize a row of the metrics 
+  cmt = cbind( cmt, data.frame( t(cm$byClass) ) ) # the dataframe of the transpose, with k valued added in front
+  confusionMatrixResultDf = rbind(confusionMatrixResultDf, cmt)
+  # print("Other metrics : ")
+}
+
+unloadPkg("caret")
+```
+
+
+The summarized result is here:
+
+```{r , results="asis"}
+xkabledply(confusionMatrixResultDf, title="Churn Classification Trees summary with varying MaxDepth")
+```
+
+From depths 5, the accuracy is almost same, therefore, we choose depths 5 to build the classification tree model.
+
+```{r , echo = T, fig.dim=c(6,4)}
+set.seed(1)
+Churnfit <- rpart(Churn ~ TotalCharges + MonthlyCharges + tenure + Contract +  OnlineSecurity + PaymentMethod, data=customerNum, method="class", control = list(maxdepth = 5) )
+
+printcp(Churnfit) # display the results 
+plotcp(Churnfit) # visualize cross-validation results 
+summary(Churnfit) # detailed summary of splits
+
+# plot tree 
+plot(Churnfit, uniform=TRUE, main="Classification Tree for Churn")
+text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
+
+```
+
+```{r  }
+# create attractive postcript plot of tree 
+post(Churnfit, file = "ChurnTree2.ps", title = "Classification Tree for Churn")
+```
+
+
+
+```{r , include=T}
+loadPkg("caret") 
+cm = confusionMatrix( predict(Churnfit, type = "class") , reference = customerNum[, "Churn"])
+print('Overall: ')
+cm$overall
+print('Class: ')
+cm$byClass
+unloadPkg("caret")
+```
+
+
+The overall accuracy is `r round(cm$overall["Accuracy"]*100, digits=2)`%. These are the same metrics of sensitivity (also known as recall rate, TP / (TP+FN) ), specificity (TN / (TN+FP) ), F1 score, and others that we used in Logistic Regression and KNN analyses. Indeed, any "classifiers" can use the confustion matrix approach as one of the evaluation tools. 
+
+
+```{r Classification Tree, results="asis"}
+xkabledply(cm$table, "confusion matrix")
+```
+
+Next, we can try two other ways to plot the tree, with library `rpart.plot` and a "fancy" plot using the library `rattle`.
+
+```{r Classification Tree fancyplot}
+loadPkg("rpart.plot")
+rpart.plot(Churnfit)
+loadPkg("rattle") 
+fancyRpartPlot(Churnfit)
+```
+
+Then we can prune the tree.
+
+```{r Classification Tree prune}
+#prune the tree 
+Churnfit <- prune(Churnfit, cp = Churnfit$cptable[2,"CP"])
+
+# plot the pruned tree 
+fancyRpartPlot(Churnfit)
+# For boring plot, use codes below instead
+plot(Churnfit, uniform=TRUE, main="Pruned Classification Tree for Churn")
+text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
+```
+
+
+
+```{R ROC curve of Classification Tree}
+rp <- rpart(Churn ~ ., data = customerNum)
+library(pROC)
+pred <- prediction(predict(Churnfit, type = "prob")[, 2], customerNum$Churn)
+plot(performance(pred, "tpr", "fpr"), main = "ROC Churn")
+auc = performance(pred, 'auc')
+slot(auc, 'y.values')
+abline(0, 1, lty = 2)
+```
+
