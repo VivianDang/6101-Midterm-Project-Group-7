@@ -79,3 +79,306 @@ summary(customer)  # there are 11 NA in TotalCharges
 customer <- na.omit(customer)
 sum(is.na(customer))
 ```
+
+```{r Feature Selection}
+customer2 = customer[,c(-1)]
+colnames(customer2)[20] = "y"
+
+str(customer2)
+```
+
+```{r Feature Selection}
+loadPkg("bestglm")
+res.bestglm <- bestglm(Xy = customer2, family = binomial,
+            IC = "AIC",                 # Information criteria for
+            method = "exhaustive")
+summary(res.bestglm)
+```
+
+```{r 1.1Logistic Regression}
+logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_all)
+xkabledply(logistic_all)
+
+```
+```{r 1.1Logistic Regression}
+logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_all)
+xkabledply(logistic_all)
+
+```
+Delete `gender`
+
+```{r 1.1Logistic Regression}
+logistic_1 = glm(Churn ~ SeniorCitizen + Partner + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_1)
+xkabledply(logistic_1)
+
+```
+Delete `Partner`
+
+```{r 1.1Logistic Regression}
+logistic_2 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_2)
+xkabledply(logistic_2)
+
+```
+Delete `PhoneService`
+
+```{r 1.1Logistic Regression}
+logistic_3 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_3)
+xkabledply(logistic_3)
+
+```
+Delete `MultipleLines`
+
+```{r 1.1Logistic Regression}
+logistic_4 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_4)
+xkabledply(logistic_4)
+
+```
+Delete `OnlineBackup`
+
+
+```{r 1.1Logistic Regression}
+logistic_5 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_5)
+xkabledply(logistic_5)
+
+```
+Delete `DeviceProtection`
+
+```{r 1.1Logistic Regression}
+logistic_6 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_6)
+xkabledply(logistic_6)
+
+```
+Delete `PaymentMethod`
+
+```{r 1.1Logistic Regression}
+logistic_7 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_7)
+xkabledply(logistic_7)
+
+```
+Now all variables are significant.
+
+```{r exp}
+expcoeff1 = exp(coef(logistic_7))
+summary(expcoeff1)
+xkabledply( as.table(expcoeff1), title = "Exponential of coefficients in Churn" )
+
+```
+
+#### Confusion matrix 
+```{r confusionMatrix, results='markup'}
+loadPkg("regclass")
+confusion_matrix(logistic_7)
+xkabledply( confusion_matrix(logistic_7), title = "Confusion matrix from Logit Model" )
+unloadPkg("regclass")
+```
+
+```{r confusion matrix, results=T}
+loadPkg("regclass")
+cfmatrix1 = confusion_matrix(logistic_7)
+accuracy1 <- (cfmatrix1[1,1]+cfmatrix1[2,2])/cfmatrix1[3,3]
+precision1 <- cfmatrix1[2,2]/(cfmatrix1[2,2]+cfmatrix1[1,2])
+recall1 <- cfmatrix1[2,2]/(cfmatrix1[2,2]+cfmatrix1[2,1])
+specificity1 <- cfmatrix1[1,1]/(cfmatrix1[1,1]+cfmatrix1[1,2])
+F1_score1 <- 2*(precision1)*(recall1)/(precision1 + recall1)
+accuracy1
+precision1
+recall1
+specificity1
+F1_score1
+```
+From confusion matrix, we can conclude that 
+Accuracy =`r accuracy1`
+Precision=`r precision1`
+Recall=`r recall1`
+Specificity=`r specificity1`
+F1 score=`r F1_score1`
+
+```{r roc_auc, results=T}
+loadPkg("pROC") 
+prob=predict(logistic_1, type = "response" )
+customer$prob=prob
+h = roc(Churn~prob, data=customer)
+auc(h) 
+plot(h)
+
+```
+We have here the area-under-curve of `r auc(h)`, which is greater than 0.8. The model is considered a good fit.
+
+```{r McFadden, results=T}
+loadPkg("pscl")
+ChurnLogitpr2 = pR2(logistic_1)
+ChurnLogitpr2
+unloadPkg("pscl") 
+```
+With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 28.5% of the variations in y is explained by the explanatory variables in the model. 
+
+
+
+##### Classification Tree
+
+```{r Classification Tree}
+customerNum = customer
+# convert categorical variable as numeric 
+for(i in 2:20){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+customerNum <- subset(customerNum, select = -customerID)
+```
+
+
+
+```{r Classification Tree feature selection}
+library(randomForest)
+fit_im = randomForest(customerNum$Churn~., data=customerNum)
+# Create an importance based on mean decreasing gini
+importance(fit_im)
+varImpPlot(fit_im)
+```
+
+From the sorted importance picture, we can select the top 6 features to build the tree model.  
+
+
+Then, firstly, try to find the best depths.
+
+```{r Classification Tree depths result}
+loadPkg("rpart")
+loadPkg("caret")
+
+
+
+# create an empty dataframe to store the results from confusion matrices
+confusionMatrixResultDf = data.frame( Depth=numeric(0), Accuracy= numeric(0), Sensitivity=numeric(0), Specificity=numeric(0), Pos.Pred.Value=numeric(0), Neg.Pred.Value=numeric(0), Precision=numeric(0), Recall=numeric(0), F1=numeric(0), Prevalence=numeric(0), Detection.Rate=numeric(0), Detection.Prevalence=numeric(0), Balanced.Accuracy=numeric(0), row.names = NULL )
+
+for (deep in 2:8) {
+  kfit <- rpart(Churn ~ TotalCharges + MonthlyCharges + tenure + Contract +  OnlineSecurity + PaymentMethod, data=customerNum, method="class", control = list(maxdepth = deep) )
+  # 
+  cm = confusionMatrix( predict(kfit, type = "class"), reference = customerNum[, "Churn"] ) # from caret library
+  # 
+  cmaccu = cm$overall['Accuracy']
+  # print( paste("Total Accuracy = ", cmaccu ) )
+  # 
+  cmt = data.frame(Depth=deep, Accuracy = cmaccu, row.names = NULL ) # initialize a row of the metrics 
+  cmt = cbind( cmt, data.frame( t(cm$byClass) ) ) # the dataframe of the transpose, with k valued added in front
+  confusionMatrixResultDf = rbind(confusionMatrixResultDf, cmt)
+  # print("Other metrics : ")
+}
+
+unloadPkg("caret")
+```
+
+
+The summarized result is here:
+
+```{r Classification Tree, results="asis"}
+xkabledply(confusionMatrixResultDf, title="Churn Classification Trees summary with varying MaxDepth")
+```
+
+From depths 5, the accuracy is almost same, therefore, we choose depths 5 to build the classification tree model.
+
+```{r Classification Tree, echo = T, fig.dim=c(6,4)}
+set.seed(1)
+Churnfit <- rpart(Churn ~ TotalCharges + MonthlyCharges + tenure + Contract +  OnlineSecurity + PaymentMethod, data=customerNum, method="class", control = list(maxdepth = 5) )
+
+printcp(Churnfit) # display the results 
+plotcp(Churnfit) # visualize cross-validation results 
+summary(Churnfit) # detailed summary of splits
+
+# plot tree 
+plot(Churnfit, uniform=TRUE, main="Classification Tree for Churn")
+text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
+
+```
+
+```{r Classification Tree}
+# create attractive postcript plot of tree 
+post(Churnfit, file = "ChurnTree2.ps", title = "Classification Tree for Churn")
+```
+
+
+
+```{r Classification Tree, include=T}
+loadPkg("caret") 
+cm = confusionMatrix( predict(Churnfit, type = "class") , reference = customerNum[, "Churn"])
+print('Overall: ')
+cm$overall
+print('Class: ')
+cm$byClass
+unloadPkg("caret")
+```
+
+The overall accuracy is `r round(cm$overall["Accuracy"]*100, digits=2)`%. These are the same metrics of sensitivity (also known as recall rate, TP / (TP+FN) ), specificity (TN / (TN+FP) ), F1 score, and others that we used in Logistic Regression and KNN analyses. Indeed, any "classifiers" can use the confustion matrix approach as one of the evaluation tools. 
+
+
+```{r Classification Tree, results="asis"}
+xkabledply(cm$table, "confusion matrix")
+```
+
+Next, we can try two other ways to plot the tree, with library `rpart.plot` and a "fancy" plot using the library `rattle`.
+
+```{r Classification Tree fancyplot}
+loadPkg("rpart.plot")
+rpart.plot(Churnfit)
+loadPkg("rattle") 
+fancyRpartPlot(Churnfit)
+```
+
+Then we can prune the tree.
+
+```{r Classification Tree prune}
+#prune the tree 
+Churnfit <- prune(Churnfit, cp = Churnfit$cptable[2,"CP"])
+
+# plot the pruned tree 
+fancyRpartPlot(Churnfit)
+# For boring plot, use codes below instead
+plot(Churnfit, uniform=TRUE, main="Pruned Classification Tree for Churn")
+text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
+```
