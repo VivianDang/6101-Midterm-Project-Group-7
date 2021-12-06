@@ -105,6 +105,19 @@ test_svm <- subset(dat, split == "FALSE")
 
 
 ```{r}
+# sample training data and fit model
+# train <- base::sample(200,100, replace = FALSE)
+svmfit <- svm(Churn~., data = train_svm, kernel = "radial", gamma = 1, cost = 1)
+# plot classifier
+# plot(svmfit, dat)
+
+# Fit radial-based SVM in kernlab
+# kernfit <- ksvm(subset(train_svm,select=-c(Churn)),train_svm$Churn, type = "C-svc", kernel = 'rbfdot', C = 1, scaled = c())
+# Plot training data
+# plot(kernfit, data = x[train,])
+```
+
+```{r}
 # tune model to find optimal cost, gamma values
 tune.out <- tune(svm, Churn~., data = train_svm, kernel = "radial",
                  ranges = list(cost = c(0.1,1,10,100,1000),
@@ -129,7 +142,7 @@ tune.out.linear$best.model
 
 ```{r}
 print('The parameter of best svm model with linear kernel is:')
-tune.out.linear$best.parameters
+# tune.out.linear$best.parameters
 best_svm_linear_fit <- svm(Churn~., data = train_svm, kernel = "linear", cost = 10,probability = TRUE)
 ```
 
@@ -199,9 +212,9 @@ unloadPkg("caret")
 
 ```{r}
 xkabledply(cm_radial$table, "confusion matrix for svm radial")
-xkabledply(cm_linear$table, "confusion matrix for svm radial")
-xkabledply(cm_polynomial$table, "confusion matrix for svm radial")
-xkabledply(cm_sigmoid$table, "confusion matrix for svm radial")
+xkabledply(cm_linear$table, "confusion matrix for svm linear")
+xkabledply(cm_polynomial$table, "confusion matrix for svm polynomial")
+xkabledply(cm_sigmoid$table, "confusion matrix for svm sigmoid")
 ```
 
 ```{r}
