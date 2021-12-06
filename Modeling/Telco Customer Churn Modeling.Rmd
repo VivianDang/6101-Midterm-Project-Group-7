@@ -80,6 +80,21 @@ customer <- na.omit(customer)
 sum(is.na(customer))
 ```
 
+```{r Feature Selection}
+customer2 = customer[,c(-1)]
+colnames(customer2)[20] = "y"
+
+str(customer2)
+```
+
+```{r Feature Selection}
+loadPkg("bestglm")
+res.bestglm <- bestglm(Xy = customer2, family = binomial,
+            IC = "AIC",                 # Information criteria for
+            method = "exhaustive")
+summary(res.bestglm)
+```
+
 ```{r 1.1Logistic Regression}
 logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
@@ -89,8 +104,8 @@ logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenur
 summary(logistic_all)
 xkabledply(logistic_all)
 
-
 ```
+
 ```{r 1.2Logistic Regression}
 logistic_1 = glm(Churn ~ SeniorCitizen + Dependents + tenure + MultipleLines + InternetService
                          + StreamingTV + StreamingMovies + Contract + PaperlessBilling + TotalCharges, 
