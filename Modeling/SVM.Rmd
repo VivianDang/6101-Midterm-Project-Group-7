@@ -112,7 +112,7 @@ svmfit <- svm(Churn~., data = train_svm, kernel = "radial", gamma = 1, cost = 1)
 # plot(svmfit, dat)
 
 # Fit radial-based SVM in kernlab
-kernfit <- ksvm(subset(train_svm,select=-c(Churn)),train_svm$Churn, type = "C-svc", kernel = 'rbfdot', C = 1, scaled = c())
+# kernfit <- ksvm(subset(train_svm,select=-c(Churn)),train_svm$Churn, type = "C-svc", kernel = 'rbfdot', C = 1, scaled = c())
 # Plot training data
 # plot(kernfit, data = x[train,])
 ```
@@ -127,9 +127,53 @@ tune.out$best.model
 ```
 
 ```{r}
-print('The parameter of best svm model is:')
-tune.out$best.parameters
+print('The parameter of best svm model with radial basis kernel is:')
+# tune.out$best.parameters
 best_svmfit <- svm(Churn~., data = train_svm, kernel = "radial", gamma = 0.5, cost = 1,probability = TRUE)
+```
+
+```{r}
+# tune model to find optimal cost, gamma values
+tune.out.linear <- tune(svm, Churn~., data = train_svm, kernel = "linear",
+                 ranges = list(cost = c(0.1,1,10,100,1000)))
+# show best model
+tune.out.linear$best.model
+```
+
+```{r}
+print('The parameter of best svm model with linear kernel is:')
+# tune.out.linear$best.parameters
+best_svm_linear_fit <- svm(Churn~., data = train_svm, kernel = "linear", cost = 10,probability = TRUE)
+```
+
+```{r}
+# tune model to find optimal cost, gamma values
+tune.out.polynomial <- tune(svm, Churn~., data = train_svm[1:200,], kernel = "polynomial",
+                 ranges = list(cost = c(0.1,1,10,100,1000),
+                               gamma = c(0.5,1,2,3,4)))
+# show best model
+tune.out.polynomial$best.model
+```
+
+```{r}
+print('The parameter of best svm model with polynomial kernel is:')
+tune.out.polynomial$best.parameters
+best_svm_polynomial_fit <- svm(Churn~., data = train_svm, kernel = "polynomial", gamma = 0.1,cost = 0.5,probability = TRUE)
+```
+
+```{r}
+# tune model to find optimal cost, gamma values
+tune.out.sigmoid <- tune(svm, Churn~., data = train_svm[1:200,], kernel = "sigmoid",
+                 ranges = list(cost = c(0.1,1,10,100,1000),
+                               gamma = c(0.5,1,2,3,4)))
+# show best model
+tune.out.sigmoid$best.model
+```
+
+```{r}
+print('The parameter of best svm model with sigmoid kernel is:')
+tune.out.sigmoid$best.parameters
+best_svm_sigmoid_fit <- svm(Churn~., data = train_svm, kernel = "sigmoid", gamma = 0.5, cost = 0.1,probability = TRUE)
 ```
 
 ```{r}
@@ -138,16 +182,55 @@ best_svmfit <- svm(Churn~., data = train_svm, kernel = "radial", gamma = 0.5, co
 # valid
 #method 2(confusion matrix)
 loadPkg("caret") 
-cm = confusionMatrix( predict(best_svmfit,test_svm), reference = test_svm$Churn )
-print('Overall: ')
-cm$overall
-print('Class: ')
-cm$byClass
+
+cm_radial = confusionMatrix( predict(best_svmfit,test_svm), reference = test_svm$Churn )
+print('Overall of SVM radial kernel: ')
+cm_radial$overall
+print('Class of SVM radial kernel: ')
+cm_radial$byClass
+
+cm_linear = confusionMatrix( predict(best_svm_linear_fit,test_svm), reference = test_svm$Churn )
+print('Overall of SVM linear kernel: ')
+cm_linear$overall
+print('Class of SVM linear kernel: ')
+cm_linear$byClass
+
+cm_polynomial = confusionMatrix( predict(tune.out.polynomial$best.model,test_svm), reference = test_svm$Churn )
+print('Overall of SVM polynomial kernel: ')
+cm_polynomial$overall
+print('Class of SVM polynomial kernel: ')
+cm_polynomial$byClass
+
+cm_sigmoid = confusionMatrix( predict(tune.out.sigmoid$best.model,test_svm), reference = test_svm$Churn )
+print('Overall of SVM sigmoid kernel: ')
+cm_sigmoid$overall
+print('Class of SVM sigmoid kernel: ')
+cm_sigmoid$byClass
+
 unloadPkg("caret")
 ```
 
 ```{r}
-xkabledply(cm$table, "confusion matrix for svm")
+xkabledply(cm_radial$table, "confusion matrix for svm radial")
+xkabledply(cm_linear$table, "confusion matrix for svm radial")
+xkabledply(cm_polynomial$table, "confusion matrix for svm radial")
+xkabledply(cm_sigmoid$table, "confusion matrix for svm radial")
+```
+
+```{r}
+library(gmodels)
+c.radial <- CrossTable(test_svm$Churn, predict(best_svmfit,test_svm), prop.chisq = FALSE)
+c.linear <- CrossTable(test_svm$Churn, predict(best_svm_linear_fit,test_svm), prop.chisq = FALSE)
+c.polynomial <- CrossTable(test_svm$Churn, predict(best_svm_polynomial_fit,test_svm), prop.chisq = FALSE)
+c.sigmoid <- CrossTable(test_svm$Churn, predict(best_svm_sigmoid_fit,test_svm), prop.chisq = FALSE)
+```
+
+```{r}
+logistic_7 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
 ```
 
 ```{r}
@@ -156,15 +239,32 @@ xkabledply(cm$table, "confusion matrix for svm")
 x.svm.prob <- predict(best_svmfit, type="prob", newdata=test_svm, probability = TRUE)
 x.svm.prob.rocr <- prediction(attr(x.svm.prob, "probabilities")[,2], test_svm$Churn)
 x.svm.perf <- performance(x.svm.prob.rocr, "tpr","fpr")
-plot(x.svm.perf, col=6)
+plot(x.svm.perf, col=3)
 
+x.svm.linear.prob <- predict(best_svm_linear_fit, type="prob", newdata=test_svm, probability = TRUE)
+x.svm.linear.prob.rocr <- prediction(attr(x.svm.linear.prob, "probabilities")[,2], test_svm$Churn)
+x.svm.linear.perf <- performance(x.svm.prob.rocr, "tpr","fpr")
+plot(x.svm.linear.perf, col=4, add=TRUE)
+
+x.svm.polynomial.prob <- predict(best_svm_polynomial_fit, type="prob", newdata=test_svm, probability = TRUE)
+x.svm.polynomial.prob.rocr <- prediction(attr(x.svm.prob, "probabilities")[,2], test_svm$Churn)
+x.svm.polynomial.perf <- performance(x.svm.polynomial.prob.rocr, "tpr","fpr")
+plot(x.svm.perf, col=5, add=TRUE)
+
+x.svm.sigmoid.prob <- predict(best_svm_sigmoid_fit, type="prob", newdata=test_svm, probability = TRUE)
+x.svm.sigmoid.prob.rocr <- prediction(attr(x.svm.prob, "probabilities")[,2], test_svm$Churn)
+x.svm.sigmoid.perf <- performance(x.svm.sigmoid.prob.rocr, "tpr","fpr")
+plot(x.svm.perf, col=6, add=TRUE)
+
+# Draw a legend.
+legend(0.6, 0.6, c( 'logistic','svm radial','svm linear','svm polynomial','svm sigmoid'), 2:6)
+
+#logistic
 x.glm.prob <- predict(logistic_7, type = "response" )
 x.glm.prob.rocr <- prediction(x.glm.prob, customer$Churn)
 x.glm.perf <- performance(x.glm.prob.rocr, "tpr","fpr")
-plot(x.glm.perf, col=5)
+plot(x.glm.perf, col=2, add=TRUE)
 
-# Draw a legend.
-# legend(0.6, 0.6, c('ctree', 'logistic','svm'), 4:6)
 ```
 
 
