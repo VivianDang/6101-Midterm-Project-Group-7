@@ -80,8 +80,6 @@ customer <- na.omit(customer)
 sum(is.na(customer))
 ```
 
-
-
 ```{r 1.1Logistic Regression}
 logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
