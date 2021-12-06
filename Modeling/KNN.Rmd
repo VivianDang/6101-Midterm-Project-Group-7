@@ -1,0 +1,304 @@
+---
+title: "KNN"
+author: "Yuan Dang"
+#date: "today"
+date: "`r Sys.Date()`"
+# this style requires installing rmdformats package 
+output:  
+    rmdformats::readthedown:
+      toc_float: true
+      toc_depth: 3
+      number_sections: true
+      code_folding: hide
+      includes:
+        before_body: header.html
+---
+
+```{r init, include=FALSE}
+# some of common options (and the defaults) are: 
+# include=T, eval=T, echo=T, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+library(ezids)
+library(ggplot2)
+library(ggpubr)
+# knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+knitr::opts_chunk$set(warning = F, results = "hide", message = F)
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
+# ‘scipen’: integer. A penalty to be applied when deciding to print numeric values in fixed or exponential notation.  Positive values bias towards fixed and negative towards scientific notation: fixed notation will be preferred unless it is more than ‘scipen’ digits wider.
+# use scipen=999 to prevent scientific notation at all times
+```
+
+# Telco Customer Churn
+## Description
+The Telco customer churn data contains information about a telephone company that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. It indicates which customers have left, stayed, or signed up for their service.  
+Studying such data can help companies identify the characteristics of lost customers, identify potential, soon-to-be-lost customers and develop appropriate strategies to retain them.  
+The dataset is WA_Fn-UseC_-Telco-Customer-Churn.csv.  
+
+### variables
+
+* `gender`: Female or Male
+* `SeniorCitizen`: customer is a senior citizen or not (Yes, No)
+* `Partner`: customer has a partner or not (Yes, No)
+* `Dependents`: customer has dependents or not (Yes, No)
+* `tenure`: number of months the customer has stayed with the company
+* `PhoneService`: customer has a phone service or not (Yes, No)
+* `MultipleLines`: customer has multiple lines or not (Yes, No, No phone service)
+* `InternetService`: customer’s internet service provider (DSL, Fiber optic, No)
+* `OnlineSecurity`: customer has online security or not (Yes, No, No internet service)
+* `OnlineBackup`: customer has online backup or not (Yes, No, No internet service)
+* `DeviceProtection`: customer has device protection or not (Yes, No, No internet service)
+* `TechSupport`: customer has tech support or not (Yes, No, No internet service)
+* `StreamingTV`: customer has streaming TV or not (Yes, No, No internet service)
+* `StreamingMovies`: customer has streaming movies or not (Yes, No, No internet service)
+* `Contract`: contract term of the customer (Month-to-month, One year, Two year)
+* `PaperlessBilling`: customer has paperless billing or not (Yes, No)
+* `PaymentMethod`: Electronic check, Mailed check, Bank transfer (automatic), Credit card (automatic)
+* `MonthlyCharges`: amount charged monthly
+* `TotalCharges`: total amount charged
+* `Churn`: customer churned or not (Yes or No)
+
+```{r import, include=FALSE}
+customer <- data.frame(read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv"))
+str(customer)
+#head(customer)
+```
+
+```{r asfactor, include=FALSE}
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customer[,i] = factor(customer[,i])
+  }
+}
+levels(customer$SeniorCitizen) <- c("No", "Yes") # no=1, yes=2
+str(customer)
+```
+
+```{r cleanNA}
+summary(customer)  # there are 11 NA in TotalCharges
+customer <- na.omit(customer)
+sum(is.na(customer))
+str(customer)
+```
+```{r}
+#customer$customerID=NULL
+#str(customer)
+#xkablesummary(customer[1:7])
+#xkablesummary(customer[8:14])
+#xkablesummary(customer[15:20])
+```
+```{r Into Numeric}
+customerNum = customer
+# convert categorical variable as numeric 
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+customerNum$customerID = NULL
+str(customerNum)
+```
+
+```{r PCA}
+customerx <- customerNum[1:19]
+pra_scale =prcomp(customerx, scale =TRUE) # center=TRUE is the default
+print(summary(pra_scale))
+print(pra_scale$rotation)
+```
+
+```{r}
+pca_var <- (pra_scale$sdev^2)
+pve <- pca_var/sum(pca_var)
+plot(cumsum(pve), xlab="Principal Component (standardized)", ylab ="Cumulative Proportion of Variance Explained",ylim=c(0,1),type="b")
+```
+
+```{r pcr_modeling}
+loadPkg("pls")
+customer_pc=PCAxform(customerx, z=TRUE )
+customer_pc$Churn = customerNum$Churn
+head(customer_pc)
+```
+
+```{r model1}
+library(pscl)
+pcModel = glm("Churn~.", data=customer_pc)
+xkabledply(pcModel, title = "Full model using Principal Comps")
+summary(pcModel)
+pR2(pcModel)
+xkablevif(pcModel)
+```
+
+```{r with significant}
+customer_pc2 <- subset(customer_pc, select = -c(PC7,PC8,PC9,PC10,PC13,PC15,PC17))
+pcModel2 = glm("Churn~.", data=customer_pc2)
+xkabledply(pcModel2, title = "Model using Significant Principal Comps")
+summary(pcModel2)
+pR2(pcModel2)
+xkablevif(pcModel2)
+```
+
+```{r with very significant}
+customer_pc3 <- subset(customer_pc, select = -c(PC7,PC8,PC9,PC10,PC13,PC15,PC17,PC6,PC11,PC12,PC16))
+#customer_pc3$Churn <- factor(customer_pc3)
+#levels(customer_pc3$Churn) <- c(0,1)
+pcModel3 = glm("Churn~.", data=customer_pc3)
+xkabledply(pcModel3, title = "Model using Significant Principal Comps")
+summary(pcModel3)
+pR2(pcModel3)
+xkablevif(pcModel3)
+```
+
+```{r}
+set.seed(1)
+customer_sampe <- sample(2, nrow(customerNum), replace=TRUE, prob=c(0.67, 0.33))
+#str(customerNum)
+train <- customerNum[customer_sampe==1, 1:20]
+test <- customerNum[customer_sampe==2, 1:19]
+# y
+test_y <- customerNum[customer_sampe==2, 20]
+pcModel4 <- pcr(Churn~. ,data=train,scale=TRUE,validation="CV")
+summary(pcModel4)
+validationplot(pcModel4,val.type="MSEP")
+```
+```{r}
+au <- data.frame(test)
+au$Churn = test_y
+au$pcr_pred <- predict(pcModel4, test, ncomp = 14)
+#df_predict <- data.frame(pc_pred,test_y)
+library(pROC)
+h <- roc(Churn~pcr_pred, data=au)
+plot(h)
+auc(h)
+```
+
+```{r preproccessing}
+customer_final=customerNum
+customer_final$Churn <-  factor(customer_final$Churn)
+str(customer_final)
+cusKNN <- subset(customer_final, select=c(SeniorCitizen, Partner, Dependents, PaperlessBilling, OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport, Contract, tenure, MonthlyCharges, Churn))
+str(cusKNN)
+cus_scale = cusKNN
+cus_scale[10:11]<- scale(cusKNN[10:11], center = TRUE, scale = TRUE)
+cus_scale$Churn <- customer_final$Churn
+str(cus_scale)
+```
+```{r train_test_split}
+#customer_sampe <- sample(2, nrow(cusKNN), replace=TRUE, prob=c(0.67, 0.33))
+#cus_train <- cusKNN[customer_sampe==1, 1:11]
+#cus_test <- cusKNN[customer_sampe==2, 1:11]
+# y
+#cus_train_y <- cusKNN[customer_sampe==1, 12]
+#cus_test_y <- cusKNN[customer_sampe==2, 12]
+set.seed(1)
+customer_sampe <- sample(2, nrow(cus_scale), replace=TRUE, prob=c(0.67, 0.33))
+cus_train <- cus_scale[customer_sampe==1, 1:11]
+cus_test <- cus_scale[customer_sampe==2, 1:11]
+# y
+cus_train_y <- cus_scale[customer_sampe==1, 12]
+cus_test_y <- cus_scale[customer_sampe==2, 12]
+```
+
+```{r}
+str(cus_train)
+str(cus_test)
+```
+#```{r cutoff}
+#library(ggplot2)
+#library(ggthemes)
+
+#cus_test$Churn = cus_test_y
+#str(cus_test)
+#ggplot(cus_test, aes(pred, color=Churn))+
+#  geom_density(size=1) +
+#  scale_color_economist(name="Churn", labels=c("No", "Yes")) +
+#  theme_economist()
+#```
+
+```{r selectk}
+loadPkg("class")
+chooseK = function(k, train_set, val_set, train_class, val_class){
+  
+  # Build knn with k neighbors considered.
+  set.seed(1)
+  class_knn = knn(train = train_set,    #<- training set cases
+                  test = val_set,       #<- test set cases
+                  cl = train_class,     #<- category for classification
+                  k = k) #,                #<- number of neighbors considered
+                  # use.all = TRUE)       #<- control ties between class assignments. If true, all distances equal to the k-th largest are included
+  
+  tab = table(class_knn, val_class)
+  
+  # Calculate the accuracy.
+  accu = sum(tab[row(tab) == col(tab)]) / sum(tab)                         
+  cbind(k = k, accuracy = accu)
+}
+
+# The sapply() function plugs in several values into our chooseK function.
+# function(x)[function] allows you to apply a series of numbers
+# to a function without running a for() loop.
+knn_different_k = sapply(seq(1, 21, by = 2),  #<- set k to be odd number from 1 to 21
+                         function(x) chooseK(x, 
+                                             train_set = cus_train,
+                                             val_set = cus_test,
+                                             train_class = cus_train_y,
+                                             val_class = cus_test_y))
+
+# Reformat the results to graph the results.
+str(knn_different_k)
+knn_different_k = data.frame(k = knn_different_k[1,],
+                             accuracy = knn_different_k[2,])
+
+# Plot accuracy vs. k.
+# install.packages("ggplot2")
+loadPkg("ggplot2")
+
+ggplot(knn_different_k,
+       aes(x = k, y = accuracy)) +
+  geom_line(color = "orange", size = 1.5) +
+  geom_point(size = 3) + 
+  labs(title = "accuracy vs k")
+
+```
+
+```{r KNN}
+pred <- knn(train = cus_train, test = cus_test, cl=cus_train_y, k=9)
+pred
+```
+```{r}
+loadPkg("caret") 
+cm = confusionMatrix(pred, reference = cus_test_y )
+cm$overall
+cm$byClass
+```
+
+```{r confusion matrix}
+loadPkg("gmodels")
+churnPredCross <- CrossTable(cus_test_y, pred, prop.chisq = FALSE)
+#Looks like we got all but three correct, not bad
+Accuracy = (1505+333)/2349
+Precision = 333/535
+RecallRate = 333/642 
+Specificity = 1505/1507
+```
+```{r comparing}
+# How does the kNN classification compare to the true class?
+# Let's take a look at the confusion matrix by combining the 
+# predictions from bank_3NN to the original data set.
+kNN_res = table(pred,
+                cus_test_y)
+kNN_res
+sum(kNN_res)  #<- the total is all the test examples
+
+# Select the true positives and true negatives by selecting
+# only the cells where the row and column names are the same.
+kNN_res[row(kNN_res) == col(kNN_res)]
+
+# Calculate the accuracy rate by dividing the correct classifications
+# by the total number of classifications.
+kNN_acc = sum(kNN_res[row(kNN_res) == col(kNN_res)]) / sum(kNN_res)
+kNN_acc
+```
+```
+
+
