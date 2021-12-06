@@ -236,7 +236,7 @@ We have here the area-under-curve of `r auc(h)`, which is greater than 0.8. The 
 
 ```{r McFadden, results=T}
 loadPkg("pscl")
-ChurnLogitpr2 = pR2(logistic_1)
+ChurnLogitpr2 = pR2(logistic_7)
 ChurnLogitpr2
 unloadPkg("pscl") 
 ```
