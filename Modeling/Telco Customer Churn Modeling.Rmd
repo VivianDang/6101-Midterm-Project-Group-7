@@ -256,3 +256,129 @@ ChurnLogitpr2
 unloadPkg("pscl") 
 ```
 With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 28.5% of the variations in y is explained by the explanatory variables in the model. 
+
+
+
+##### Classification Tree
+
+```{r Classification Tree}
+customerNum = customer
+# convert categorical variable as numeric 
+for(i in 2:20){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+customerNum <- subset(customerNum, select = -customerID)
+```
+
+
+
+```{r Classification Tree feature selection}
+library(randomForest)
+fit_im = randomForest(customerNum$Churn~., data=customerNum)
+# Create an importance based on mean decreasing gini
+importance(fit_im)
+varImpPlot(fit_im)
+```
+
+From the sorted importance picture, we can select the top 6 features to build the tree model.  
+
+
+Then, firstly, try to find the best depths.
+
+```{r Classification Tree depths result}
+loadPkg("rpart")
+loadPkg("caret")
+
+
+
+# create an empty dataframe to store the results from confusion matrices
+confusionMatrixResultDf = data.frame( Depth=numeric(0), Accuracy= numeric(0), Sensitivity=numeric(0), Specificity=numeric(0), Pos.Pred.Value=numeric(0), Neg.Pred.Value=numeric(0), Precision=numeric(0), Recall=numeric(0), F1=numeric(0), Prevalence=numeric(0), Detection.Rate=numeric(0), Detection.Prevalence=numeric(0), Balanced.Accuracy=numeric(0), row.names = NULL )
+
+for (deep in 2:8) {
+  kfit <- rpart(Churn ~ TotalCharges + MonthlyCharges + tenure + Contract +  OnlineSecurity + PaymentMethod, data=customerNum, method="class", control = list(maxdepth = deep) )
+  # 
+  cm = confusionMatrix( predict(kfit, type = "class"), reference = customerNum[, "Churn"] ) # from caret library
+  # 
+  cmaccu = cm$overall['Accuracy']
+  # print( paste("Total Accuracy = ", cmaccu ) )
+  # 
+  cmt = data.frame(Depth=deep, Accuracy = cmaccu, row.names = NULL ) # initialize a row of the metrics 
+  cmt = cbind( cmt, data.frame( t(cm$byClass) ) ) # the dataframe of the transpose, with k valued added in front
+  confusionMatrixResultDf = rbind(confusionMatrixResultDf, cmt)
+  # print("Other metrics : ")
+}
+
+unloadPkg("caret")
+```
+
+
+The summarized result is here:
+
+```{r Classification Tree, results="asis"}
+xkabledply(confusionMatrixResultDf, title="Churn Classification Trees summary with varying MaxDepth")
+```
+
+From depths 5, the accuracy is almost same, therefore, we choose depths 5 to build the classification tree model.
+
+```{r Classification Tree, echo = T, fig.dim=c(6,4)}
+set.seed(1)
+Churnfit <- rpart(Churn ~ TotalCharges + MonthlyCharges + tenure + Contract +  OnlineSecurity + PaymentMethod, data=customerNum, method="class", control = list(maxdepth = 5) )
+
+printcp(Churnfit) # display the results 
+plotcp(Churnfit) # visualize cross-validation results 
+summary(Churnfit) # detailed summary of splits
+
+# plot tree 
+plot(Churnfit, uniform=TRUE, main="Classification Tree for Churn")
+text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
+
+```
+
+```{r Classification Tree}
+# create attractive postcript plot of tree 
+post(Churnfit, file = "ChurnTree2.ps", title = "Classification Tree for Churn")
+```
+
+
+
+```{r Classification Tree, include=T}
+loadPkg("caret") 
+cm = confusionMatrix( predict(Churnfit, type = "class") , reference = customerNum[, "Churn"])
+print('Overall: ')
+cm$overall
+print('Class: ')
+cm$byClass
+unloadPkg("caret")
+```
+
+The overall accuracy is `r round(cm$overall["Accuracy"]*100, digits=2)`%. These are the same metrics of sensitivity (also known as recall rate, TP / (TP+FN) ), specificity (TN / (TN+FP) ), F1 score, and others that we used in Logistic Regression and KNN analyses. Indeed, any "classifiers" can use the confustion matrix approach as one of the evaluation tools. 
+
+
+```{r Classification Tree, results="asis"}
+xkabledply(cm$table, "confusion matrix")
+```
+
+Next, we can try two other ways to plot the tree, with library `rpart.plot` and a "fancy" plot using the library `rattle`.
+
+```{r Classification Tree fancyplot}
+loadPkg("rpart.plot")
+rpart.plot(Churnfit)
+loadPkg("rattle") 
+fancyRpartPlot(Churnfit)
+```
+
+Then we can prune the tree.
+
+```{r Classification Tree prune}
+#prune the tree 
+Churnfit <- prune(Churnfit, cp = Churnfit$cptable[2,"CP"])
+
+# plot the pruned tree 
+fancyRpartPlot(Churnfit)
+# For boring plot, use codes below instead
+plot(Churnfit, uniform=TRUE, main="Pruned Classification Tree for Churn")
+text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
+```
