@@ -82,6 +82,8 @@ customer <- na.omit(customer)
 sum(is.na(customer))
 ```
 
+## Logistic Regression
+
 ```{r 1.1Logistic Regression}
 logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
@@ -220,7 +222,7 @@ loadPkg("pROC")
 prob=predict(logistic_7, type = "response" )
 customer$prob=prob
 h = roc(Churn~prob, data=customer)
-auc(h) 
+# auc(h) 
 plot(h)
 ```
 We have here the area-under-curve of `r auc(h)`, which is greater than 0.8. The model is considered a good fit.
@@ -385,6 +387,7 @@ xkabledply((knn_different_k))
 Select value `k=11`  
 ```{r KNN}
 pred <- knn(train = cus_train, test = cus_test, cl=cus_train_y, k=11)
+knn.roc.prob <- attr(knn(train = cus_train, test = cus_test, cl=cus_train_y, k=11,prob = T),'prob')
 pred
 ```
 
@@ -398,7 +401,7 @@ unloadPkg("class")
 unloadPkg("gmodels")
 ```
 
-### Classification Tree
+## Classification Tree
 
 ```{r}
 customerNum = customer
@@ -418,7 +421,7 @@ customerNum <- subset(customerNum, select = -customerID)
 library(randomForest)
 fit_im = randomForest(customerNum$Churn~., data=customerNum)
 # Create an importance based on mean decreasing gini
-importance(fit_im)
+# importance(fit_im)
 varImpPlot(fit_im)
 ```
 
@@ -526,13 +529,221 @@ text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
 
 
 ```{R ROC curve of Classification Tree}
-#library(rpart)
-#rp <- rpart(Churn ~ ., data = customerNum)
-#library(pROC)
-#pred <- prediction(predict(Churnfit, type = "prob")[, 2], customerNum$Churn)
-#plot(performance(pred, "tpr", "fpr"), main = "ROC Churn")
-#auc = performance(pred, 'auc')
-#slot(auc, 'y.values')
-#abline(0, 1, lty = 2)
+# library(rpart)
+# rp <- rpart(Churn ~ ., data = customerNum)
+library(ROCR)
+tree.predict.prob = predict(Churnfit, type = "prob")
+tree.pred <- prediction(tree.predict.prob[, 2], customerNum$Churn)
+plot(performance(tree.pred, "tpr", "fpr"), main = "ROC of tree")
+auc = performance(tree.pred, 'auc')
+slot(auc, 'y.values')
+abline(0, 1, lty = 2)
 ```
 
+## SVM
+
+Firstly, we need to load the package for SVM model training.
+
+```{r loadpkg for SVM,results='markup'}
+# install.packages(tidyverse)
+# install.packages(kernlab)
+# install.packages(e1071)
+# install.packages(caTools)
+library(tidyverse)#SVM
+library(kernlab)#SVM
+library(e1071)#SVM
+library(caTools)#Split Data into Test and Train Set
+library(ModelMetrics)#confusion matrix
+library(ROCR)#ROC plot
+```
+
+Then, we set up 75% of total data as the training set, and the rest of them are test set.
+
+```{r data splitting,results='markup'}
+dat=subset(customer,select=-c(customerID))
+set.seed(123)
+split <- sample.split(dat, SplitRatio = 0.75)
+# split
+train_svm <- subset(dat, split == "TRUE")
+test_svm <- subset(dat, split == "FALSE")
+```
+
+In this case, we decided to use `tune` function from `e1071` package to train SVM model. There are 4 types of kernel we can use: radial, linear, polynomial and sigmoid.
+In fact, running these models do cost a lot of time, so we have to change the sample amount of our training set. To save the running time and quickly check the process, we tried to use the less data (200 sample here only) here for showing the template of our process.
+
+### SVM with radial kernel
+
+```{r train radial SVM,results='markup'}
+# tune model to find optimal cost, gamma values
+tune.out <- tune(svm, Churn~., data = train_svm[1:200,], kernel = "radial",
+                 ranges = list(cost = c(0.1,1,10,100,1000),
+                 gamma = c(0.5,1,2,3,4)))
+# show best model
+tune.out$best.model
+```
+
+```{r best radial SVM,results='markup'}
+print('The parameter of best svm model with radial basis kernel is:')
+tune.out$best.parameters
+best_svmfit <- svm(Churn~., data = train_svm, kernel = "radial", gamma = 0.5, cost = 1,probability = TRUE)
+```
+
+### SVM with linear kernel
+
+```{r train linear SVM,results='markup'}
+# tune model to find optimal cost, gamma values
+tune.out.linear <- tune(svm, Churn~., data = train_svm[1:200,], kernel = "linear",
+                 ranges = list(cost = c(0.1,1,10,100,1000)))
+# show best model
+tune.out.linear$best.model
+```
+
+```{r best linear SVM,results='markup'}
+print('The parameter of best svm model with linear kernel is:')
+tune.out.linear$best.parameters
+best_svm_linear_fit <- svm(Churn~., data = train_svm, kernel = "linear", cost = 10,probability = TRUE)
+```
+
+### SVM with polynomial kernel
+
+
+```{r train polynomial SVM,results='markup'}
+# tune model to find optimal cost, gamma values
+tune.out.polynomial <- tune(svm, Churn~., data = train_svm[1:200,], kernel = "polynomial",
+                 ranges = list(cost = c(0.1,1,10,100,1000),
+                               gamma = c(0.5,1,2,3,4)))
+# show best model
+tune.out.polynomial$best.model
+```
+
+```{r best polunomial SVM,results='markup'}
+print('The parameter of best svm model with polynomial kernel is:')
+tune.out.polynomial$best.parameters
+best_svm_polynomial_fit <- svm(Churn~., data = train_svm, kernel = "polynomial", gamma = 0.1,cost = 0.5,probability = TRUE)
+```
+
+### SVM with sigmoid kernel
+
+```{r train sigmoid SVM,results='markup'}
+# tune model to find optimal cost, gamma values
+tune.out.sigmoid <- tune(svm, Churn~., data = train_svm[1:200,], kernel = "sigmoid",
+                 ranges = list(cost = c(0.1,1,10,100,1000),
+                               gamma = c(0.5,1,2,3,4)))
+# show best model
+tune.out.sigmoid$best.model
+```
+
+```{r best sigmoid SVM,results='markup'}
+print('The parameter of best svm model with sigmoid kernel is:')
+tune.out.sigmoid$best.parameters
+best_svm_sigmoid_fit <- svm(Churn~., data = train_svm, kernel = "sigmoid", gamma = 0.5, cost = 0.1,probability = TRUE)
+```
+
+### Evaluation for SVM models
+
+After training the best model, we try use the test set to caculate the confusion matrix and relative evaluation score like accuracy, recall rate, F1 socre and so on.
+
+These are the confusion matrix of these SVM model. The results below confusion matrix showed the evaluation score of these models.
+
+SVM with radial kernel:
+
+```{r confusion matrix for SVM radial,results='markup'}
+library(gmodels)
+c.radial <- CrossTable(test_svm$Churn, predict(best_svmfit,test_svm), prop.chisq = FALSE)
+
+# validate model performance
+# valid <- table(true = test_svm$Churn, pred = predict(best_svmfit,test_svm))
+# valid
+#method 2(confusion matrix)
+loadPkg("caret") 
+
+cm_radial = confusionMatrix( predict(best_svmfit,test_svm), reference = test_svm$Churn )
+print('Overall of SVM radial kernel: ')
+cm_radial$overall
+print('Class of SVM radial kernel: ')
+cm_radial$byClass
+```
+
+SVM with linear kernel:
+
+```{r confusion matrix for SVM linear,results='markup'}
+c.linear <- CrossTable(test_svm$Churn, predict(best_svm_linear_fit,test_svm), prop.chisq = FALSE)
+
+cm_linear = confusionMatrix( predict(best_svm_linear_fit,test_svm), reference = test_svm$Churn )
+print('Overall of SVM linear kernel: ')
+cm_linear$overall
+print('Class of SVM linear kernel: ')
+cm_linear$byClass
+```
+
+SVM with polynomial kernel:
+
+```{r confusion matrix for SVM polynomial,results='markup'}
+c.polynomial <- CrossTable(test_svm$Churn, predict(best_svm_polynomial_fit,test_svm), prop.chisq = FALSE)
+
+cm_polynomial = confusionMatrix( predict(tune.out.polynomial$best.model,test_svm), reference = test_svm$Churn )
+print('Overall of SVM polynomial kernel: ')
+cm_polynomial$overall
+print('Class of SVM polynomial kernel: ')
+cm_polynomial$byClass
+```
+
+SVM with sigmoid kernel:
+
+```{r confusion matrix for SVM sigmoid,results='markup'}
+c.sigmoid <- CrossTable(test_svm$Churn, predict(best_svm_sigmoid_fit,test_svm), prop.chisq = FALSE)
+
+cm_sigmoid = confusionMatrix( predict(tune.out.sigmoid$best.model,test_svm), reference = test_svm$Churn )
+print('Overall of SVM sigmoid kernel: ')
+cm_sigmoid$overall
+print('Class of SVM sigmoid kernel: ')
+cm_sigmoid$byClass
+
+unloadPkg("caret")
+```
+
+Finally, we plot ROC plot for comparison among the models we built above.
+
+```{r ROC plot for all models,results='markup'}
+x.svm.linear.prob <- predict(best_svm_linear_fit, type="prob", newdata=test_svm, probability = TRUE)
+x.svm.linear.prob.rocr <- prediction(attr(x.svm.linear.prob, "probabilities")[,2], test_svm$Churn)
+x.svm.linear.perf <- performance(x.svm.linear.prob.rocr, "tpr","fpr")
+plot(x.svm.linear.perf, col=4)
+
+# x.svm.prob <- predict(best_svmfit, type="prob", newdata=test_svm, probability = TRUE)
+# x.svm.prob.rocr <- prediction(attr(x.svm.prob, "probabilities")[,2], test_svm$Churn)
+# x.svm.perf <- performance(x.svm.prob.rocr, "tpr","fpr")
+# plot(x.svm.perf, col=5, add=TRUE)
+
+# x.svm.polynomial.prob <- predict(best_svm_polynomial_fit, type="prob", newdata=test_svm, probability = TRUE)
+# x.svm.polynomial.prob.rocr <- prediction(attr(x.svm.prob, "probabilities")[,2], test_svm$Churn)
+# x.svm.polynomial.perf <- performance(x.svm.polynomial.prob.rocr, "tpr","fpr")
+# plot(x.svm.perf, col=6, add=TRUE)
+
+# x.svm.sigmoid.prob <- predict(best_svm_sigmoid_fit, type="prob", newdata=test_svm, probability = TRUE)
+# x.svm.sigmoid.prob.rocr <- prediction(attr(x.svm.prob, "probabilities")[,2], test_svm$Churn)
+# x.svm.sigmoid.perf <- performance(x.svm.sigmoid.prob.rocr, "tpr","fpr")
+# plot(x.svm.perf, col=7, add=TRUE)
+
+# Draw a legend.
+# legend(0.7, 0.3, c( 'logistic','KNN','Classification Tree','svm linear'), 1:4) #with KNN
+legend(0.7, 0.3, c( 'logistic','Classification Tree','svm linear'), c(1,3,4))#withou KNN
+
+#logistic
+x.glm.prob <- predict(logistic_7, type = "response" )
+x.glm.prob.rocr <- prediction(x.glm.prob, customer$Churn)
+x.glm.perf <- performance(x.glm.prob.rocr, "tpr","fpr")
+plot(x.glm.perf, col=1, add=TRUE)
+
+#tree
+x.tree.prob <- prediction(tree.predict.prob[, 2], customerNum$Churn)
+plot(performance(x.tree.prob, "tpr", "fpr"), , col=3, add=TRUE)
+
+#knn
+# x.knn.prob <- prediction(knn.roc.prob, cus_test_y)
+# plot(performance(x.knn.prob, "tpr", "fpr"), , col=2, add=TRUE)
+
+
+```
+
+Even though SVM model won the evaluation according to the accuracy among these model, we still have to choose logistic regression model as our best classification model because of its performance on the ROC Plot and its interpretability.
