@@ -4,14 +4,13 @@ author: "Group7-Bug Tornado"
 #date: "today"
 date: "`r Sys.Date()`"
 # this style requires installing rmdformats package 
-output:  
-    rmdformats::readthedown:
-      toc_float: true
-      toc_depth: 3
-      number_sections: true
-      code_folding: hide
-      includes:
-        before_body: header.html
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
 ---
 
 ```{r init, include=FALSE}
@@ -80,6 +79,8 @@ customer <- na.omit(customer)
 sum(is.na(customer))
 ```
 
+## Logistic Regression
+
 ```{r 1.1Logistic Regression}
 logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
@@ -90,7 +91,7 @@ summary(logistic_all)
 xkabledply(logistic_all)
 
 ```
-```{r 1.1Logistic Regression}
+```{r 1.2Logistic Regression}
 logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -102,7 +103,7 @@ xkabledply(logistic_all)
 ```
 Delete `gender`
 
-```{r 1.1Logistic Regression}
+```{r 1.3Logistic Regression}
 logistic_1 = glm(Churn ~ SeniorCitizen + Partner + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -114,7 +115,7 @@ xkabledply(logistic_1)
 ```
 Delete `Partner`
 
-```{r 1.1Logistic Regression}
+```{r 1.4Logistic Regression}
 logistic_2 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -126,7 +127,7 @@ xkabledply(logistic_2)
 ```
 Delete `PhoneService`
 
-```{r 1.1Logistic Regression}
+```{r 1.5Logistic Regression}
 logistic_3 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -138,7 +139,7 @@ xkabledply(logistic_3)
 ```
 Delete `MultipleLines`
 
-```{r 1.1Logistic Regression}
+```{r 1.6Logistic Regression}
 logistic_4 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -151,7 +152,7 @@ xkabledply(logistic_4)
 Delete `OnlineBackup`
 
 
-```{r 1.1Logistic Regression}
+```{r 1.7Logistic Regression}
 logistic_5 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + DeviceProtection + TechSupport + StreamingTV
@@ -163,7 +164,7 @@ xkabledply(logistic_5)
 ```
 Delete `DeviceProtection`
 
-```{r 1.1Logistic Regression}
+```{r 1.8Logistic Regression}
 logistic_6 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + TechSupport + StreamingTV
@@ -175,7 +176,7 @@ xkabledply(logistic_6)
 ```
 Delete `PaymentMethod`
 
-```{r 1.1Logistic Regression}
+```{r 1.9Logistic Regression}
 logistic_7 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + TechSupport + StreamingTV
@@ -241,3 +242,299 @@ ChurnLogitpr2
 unloadPkg("pscl") 
 ```
 With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 28.5% of the variations in y is explained by the explanatory variables in the model. 
+
+## KNN
+```{r Into Numeric}
+customerNum = customer
+# convert categorical variable as numeric 
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+customerNum$customerID = NULL
+str(customerNum)
+```
+
+```{r preproccessing}
+customer_final=customerNum
+customer_final$Churn <-  factor(customer_final$Churn)
+str(customer_final)
+cusKNN <- subset(customer_final, select=c(SeniorCitizen, Partner, Dependents, PaperlessBilling, OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport, Contract, tenure, MonthlyCharges, Churn))
+str(cusKNN)
+cus_scale = cusKNN
+cus_scale[10:11]<- scale(cusKNN[10:11], center = TRUE, scale = TRUE)
+cus_scale$Churn <- customer_final$Churn
+str(cus_scale)
+```
+
+```{r selectk}
+loadPkg("class")
+chooseK = function(k, train_set, val_set, train_class, val_class){
+  
+  # Build knn with k neighbors considered.
+  set.seed(1)
+  class_knn = knn(train = train_set,    #<- training set cases
+                  test = val_set,       #<- test set cases
+                  cl = train_class,     #<- category for classification
+                  k = k) #,                #<- number of neighbors considered
+                  # use.all = TRUE)       #<- control ties between class assignments. If true, all distances equal to the k-th largest are included
+  
+  tab = table(class_knn, val_class)
+  #cm = confusionMatrix(class_knn, reference = cus_test_y ) # from caret library
+  # print.confusionMatrix(cm)
+  # 
+  #cmaccu = cm$overall['Accuracy']
+  
+  # Calculate the accuracy.
+  accu = sum(tab[row(tab) == col(tab)]) / sum(tab)                         
+  cbind(k = k, accuracy = accu)
+}
+```
+
+```{r KNNfull}
+fullScale = customer_final
+fullScale[c(5, 18, 19)]<- scale(fullScale[c(5, 18, 19)], center = TRUE, scale = TRUE)
+str(fullScale)
+set.seed(1)
+customer_sampe <- sample(2, nrow(fullScale), replace=TRUE, prob=c(0.75, 0.25))
+cus_train_full <- fullScale[customer_sampe==1, 1:19]
+cus_test_full <- fullScale[customer_sampe==2, 1:19]
+# y
+cus_train_full_y <- fullScale[customer_sampe==1, 20]
+cus_test_full_y <- fullScale[customer_sampe==2, 20]
+```
+Preproccessing the dataset: scale and centered the numerical variables, convert categorical variables as numeric.   
+
+```{r results='markup'}
+xkabledply(cus_train_full)
+xkabledply(cus_test_full)
+```
+
+```{r selection full}
+knn_full_different_k = sapply(seq(1, 21, by = 2),  #<- set k to be odd number from 1 to 21
+                         function(x) chooseK(x, 
+                                             train_set = cus_train_full,
+                                             val_set = cus_test_full,
+                                             train_class = cus_train_full_y,
+                                             val_class = cus_test_full_y))
+
+str(knn_full_different_k)
+knn_full_different_k = data.frame(k = knn_full_different_k[1,],
+                             accuracy = knn_full_different_k[2,])
+
+loadPkg("ggplot2")
+
+ggplot(knn_full_different_k,
+       aes(x = k, y = accuracy)) +
+  geom_line(color = "orange", size = 1.5) +
+  geom_point(size = 3) + 
+  labs(title = "accuracy vs k")
+xkabledply((knn_full_different_k))
+```
+Select value `k=15`  
+
+```{r KNN full}
+pred_full <- knn(train = cus_train_full, test = cus_test_full, cl=cus_train_full_y, k=15)
+pred_full
+```
+
+```{r confusion_matrix_full, results=T}
+loadPkg("gmodels")
+churnPredCross <- CrossTable(cus_test_full_y, pred_full, prop.chisq = FALSE)
+```
+
+### KNN with selected variables  
+
+Preproccessing the dataset: scale and centered the numerical variables, convert categorical variables as numeric.  
+`r xkabledply(cus_scale)`  
+
+```{r train_test_split}
+set.seed(1)
+customer_sampe <- sample(2, nrow(cus_scale), replace=TRUE, prob=c(0.75, 0.25))
+cus_train <- cus_scale[customer_sampe==1, 1:11]
+cus_test <- cus_scale[customer_sampe==2, 1:11]
+# y
+cus_train_y <- cus_scale[customer_sampe==1, 12]
+cus_test_y <- cus_scale[customer_sampe==2, 12]
+```
+
+```{r, results='markup'}
+xkabledply(cus_train)
+xkabledply(cus_test)
+```
+
+```{r selection}
+knn_different_k = sapply(seq(1, 21, by = 2),  #<- set k to be odd number from 1 to 21
+                         function(x) chooseK(x, 
+                                             train_set = cus_train,
+                                             val_set = cus_test,
+                                             train_class = cus_train_y,
+                                             val_class = cus_test_y))
+
+# Reformat the results to graph the results.
+str(knn_different_k)
+knn_different_k = data.frame(k = knn_different_k[1,],
+                             accuracy = knn_different_k[2,])
+
+# Plot accuracy vs. k.
+# install.packages("ggplot2")
+loadPkg("ggplot2")
+
+ggplot(knn_different_k,
+       aes(x = k, y = accuracy)) +
+  geom_line(color = "orange", size = 1.5) +
+  geom_point(size = 3) + 
+  labs(title = "accuracy vs k")
+xkabledply((knn_different_k))
+```
+Select value `k=11`  
+```{r KNN}
+pred <- knn(train = cus_train, test = cus_test, cl=cus_train_y, k=11)
+pred
+```
+
+```{r confusion_matrix_KNN}
+library("gmodels")
+churnPredCross <- CrossTable(cus_test_y, pred, prop.chisq = FALSE)
+```
+
+## Classification Tree
+
+```{r}
+customerNum = customer
+# convert categorical variable as numeric 
+for(i in 2:20){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+customerNum <- subset(customerNum, select = -customerID)
+```
+
+
+
+```{r Classification Tree feature selection}
+library(randomForest)
+fit_im = randomForest(customerNum$Churn~., data=customerNum)
+# Create an importance based on mean decreasing gini
+importance(fit_im)
+varImpPlot(fit_im)
+```
+
+From the sorted importance picture, we can select the top 6 features to build the tree model.  
+
+
+Then, firstly, try to find the best depths.
+
+```{r Classification Tree depths result}
+loadPkg("rpart")
+loadPkg("caret")
+
+
+
+# create an empty dataframe to store the results from confusion matrices
+confusionMatrixResultDf = data.frame( Depth=numeric(0), Accuracy= numeric(0), Sensitivity=numeric(0), Specificity=numeric(0), Pos.Pred.Value=numeric(0), Neg.Pred.Value=numeric(0), Precision=numeric(0), Recall=numeric(0), F1=numeric(0), Prevalence=numeric(0), Detection.Rate=numeric(0), Detection.Prevalence=numeric(0), Balanced.Accuracy=numeric(0), row.names = NULL )
+
+for (deep in 2:8) {
+  kfit <- rpart(Churn ~ TotalCharges + MonthlyCharges + tenure + Contract +  OnlineSecurity + PaymentMethod, data=customerNum, method="class", control = list(maxdepth = deep) )
+  # 
+  cm = confusionMatrix( predict(kfit, type = "class"), reference = customerNum[, "Churn"] ) # from caret library
+  # 
+  cmaccu = cm$overall['Accuracy']
+  # print( paste("Total Accuracy = ", cmaccu ) )
+  # 
+  cmt = data.frame(Depth=deep, Accuracy = cmaccu, row.names = NULL ) # initialize a row of the metrics 
+  cmt = cbind( cmt, data.frame( t(cm$byClass) ) ) # the dataframe of the transpose, with k valued added in front
+  confusionMatrixResultDf = rbind(confusionMatrixResultDf, cmt)
+  # print("Other metrics : ")
+}
+
+unloadPkg("caret")
+```
+
+
+The summarized result is here:
+
+```{r , results="asis"}
+xkabledply(confusionMatrixResultDf, title="Churn Classification Trees summary with varying MaxDepth")
+```
+
+From depths 5, the accuracy is almost same, therefore, we choose depths 5 to build the classification tree model.
+
+```{r , echo = T, fig.dim=c(6,4)}
+set.seed(1)
+Churnfit <- rpart(Churn ~ TotalCharges + MonthlyCharges + tenure + Contract +  OnlineSecurity + PaymentMethod, data=customerNum, method="class", control = list(maxdepth = 5) )
+
+printcp(Churnfit) # display the results 
+plotcp(Churnfit) # visualize cross-validation results 
+summary(Churnfit) # detailed summary of splits
+
+# plot tree 
+plot(Churnfit, uniform=TRUE, main="Classification Tree for Churn")
+text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
+
+```
+
+```{r  }
+# create attractive postcript plot of tree 
+post(Churnfit, file = "ChurnTree2.ps", title = "Classification Tree for Churn")
+```
+
+
+
+```{r , include=T}
+loadPkg("caret") 
+cm = confusionMatrix( predict(Churnfit, type = "class") , reference = customerNum[, "Churn"])
+print('Overall: ')
+cm$overall
+print('Class: ')
+cm$byClass
+unloadPkg("caret")
+```
+
+
+The overall accuracy is `r round(cm$overall["Accuracy"]*100, digits=2)`%. These are the same metrics of sensitivity (also known as recall rate, TP / (TP+FN) ), specificity (TN / (TN+FP) ), F1 score, and others that we used in Logistic Regression and KNN analyses. Indeed, any "classifiers" can use the confustion matrix approach as one of the evaluation tools. 
+
+
+```{r Classification Tree, results="asis"}
+xkabledply(cm$table, "confusion matrix")
+```
+
+Next, we can try two other ways to plot the tree, with library `rpart.plot` and a "fancy" plot using the library `rattle`.
+
+```{r Classification Tree fancyplot}
+loadPkg("rpart.plot")
+rpart.plot(Churnfit)
+loadPkg("rattle") 
+fancyRpartPlot(Churnfit)
+```
+
+Then we can prune the tree.
+
+```{r Classification Tree prune}
+#prune the tree 
+Churnfit <- prune(Churnfit, cp = Churnfit$cptable[2,"CP"])
+
+# plot the pruned tree 
+fancyRpartPlot(Churnfit)
+# For boring plot, use codes below instead
+plot(Churnfit, uniform=TRUE, main="Pruned Classification Tree for Churn")
+text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
+```
+
+
+
+```{R ROC curve of Classification Tree}
+#library(rpart)
+#rp <- rpart(Churn ~ ., data = customerNum)
+#library(pROC)
+##library("prediction")
+#pred <- prediction(predict(Churnfit, type = "prob")[, 2], customerNum$Churn)
+#plot(performance(pred, "tpr", "fpr"), main = "ROC Churn")
+#auc = performance(pred, 'auc')
+#slot(auc, 'y.values')
+#abline(0, 1, lty = 2)
+```

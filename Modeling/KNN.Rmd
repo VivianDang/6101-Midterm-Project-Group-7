@@ -185,12 +185,6 @@ str(cus_scale)
 ```
 
 ```{r train_test_split}
-#customer_sampe <- sample(2, nrow(cusKNN), replace=TRUE, prob=c(0.67, 0.33))
-#cus_train <- cusKNN[customer_sampe==1, 1:11]
-#cus_test <- cusKNN[customer_sampe==2, 1:11]
-# y
-#cus_train_y <- cusKNN[customer_sampe==1, 12]
-#cus_test_y <- cusKNN[customer_sampe==2, 12]
 set.seed(1)
 customer_sampe <- sample(2, nrow(cus_scale), replace=TRUE, prob=c(0.75, 0.25))
 cus_train <- cus_scale[customer_sampe==1, 1:11]
@@ -200,9 +194,9 @@ cus_train_y <- cus_scale[customer_sampe==1, 12]
 cus_test_y <- cus_scale[customer_sampe==2, 12]
 ```
 
-```{r}
-str(cus_train)
-str(cus_test)
+```{r, results='markup'}
+xkabledply(cus_train)
+xkabledply(cus_test)
 ```
 
 ```{r KNNfull}
@@ -247,9 +241,6 @@ chooseK = function(k, train_set, val_set, train_class, val_class){
 ```
 
 ```{r selection full}
-# The sapply() function plugs in several values into our chooseK function.
-# function(x)[function] allows you to apply a series of numbers
-# to a function without running a for() loop.
 knn_full_different_k = sapply(seq(1, 21, by = 2),  #<- set k to be odd number from 1 to 21
                          function(x) chooseK(x, 
                                              train_set = cus_train_full,
@@ -257,13 +248,10 @@ knn_full_different_k = sapply(seq(1, 21, by = 2),  #<- set k to be odd number fr
                                              train_class = cus_train_full_y,
                                              val_class = cus_test_full_y))
 
-# Reformat the results to graph the results.
 str(knn_full_different_k)
 knn_full_different_k = data.frame(k = knn_full_different_k[1,],
                              accuracy = knn_full_different_k[2,])
 
-# Plot accuracy vs. k.
-# install.packages("ggplot2")
 loadPkg("ggplot2")
 
 ggplot(knn_full_different_k,
