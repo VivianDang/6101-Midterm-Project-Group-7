@@ -82,17 +82,7 @@ customer <- na.omit(customer)
 sum(is.na(customer))
 ```
 
-```{r 1.1Logistic Regression}
-logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
-                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
-                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
-                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
-                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
-summary(logistic_all)
-xkabledply(logistic_all)
-
-```
-```{r 1.1Logistic Regression}
+```{r 1 Logistic Regression}
 logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -116,7 +106,7 @@ xkabledply(logistic_1)
 ```
 Delete `Partner`
 
-```{r 1.1Logistic Regression}
+```{r 1.2Logistic Regression}
 logistic_2 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -128,7 +118,7 @@ xkabledply(logistic_2)
 ```
 Delete `PhoneService`
 
-```{r 1.1Logistic Regression}
+```{r 1.3Logistic Regression}
 logistic_3 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -140,7 +130,7 @@ xkabledply(logistic_3)
 ```
 Delete `MultipleLines`
 
-```{r 1.1Logistic Regression}
+```{r 1.4Logistic Regression}
 logistic_4 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -153,7 +143,7 @@ xkabledply(logistic_4)
 Delete `OnlineBackup`
 
 
-```{r 1.1Logistic Regression}
+```{r 1.5Logistic Regression}
 logistic_5 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + DeviceProtection + TechSupport + StreamingTV
@@ -165,7 +155,7 @@ xkabledply(logistic_5)
 ```
 Delete `DeviceProtection`
 
-```{r 1.1Logistic Regression}
+```{r 1.6Logistic Regression}
 logistic_6 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + TechSupport + StreamingTV
@@ -177,7 +167,7 @@ xkabledply(logistic_6)
 ```
 Delete `PaymentMethod`
 
-```{r 1.1Logistic Regression}
+```{r 1.7Logistic Regression}
 logistic_7 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + TechSupport + StreamingTV
