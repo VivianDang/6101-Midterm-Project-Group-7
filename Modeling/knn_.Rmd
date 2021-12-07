@@ -185,8 +185,10 @@ churnPredCross <- CrossTable(cus_test_full_y, pred_full, prop.chisq = FALSE)
 
 ### KNN with selected variables  
 
-Prepossessing the dataset: scale and centered the numerical variables, convert categorical variables as numeric.  
-`r xkabledply(cus_scale)`  
+Prepossessing the dataset: scale and centered the numerical variables, convert categorical variables as numeric.
+```{r results='markup'}
+str(cus_scale)
+```
 
 ```{r train_test_split}
 set.seed(1)
@@ -199,8 +201,8 @@ cus_test_y <- cus_scale[customer_sampe==2, 12]
 ```
 
 ```{r, results='markup'}
-xkabledply(cus_train)
-xkabledply(cus_test)
+str(cus_train)
+str(cus_test)
 ```
 
 ```{r selection}
@@ -233,7 +235,7 @@ pred <- knn(train = cus_train, test = cus_test, cl=cus_train_y, k=11)
 pred
 ```
 
-```{r confusion_matrix_KNN}
+```{r confusion_matrix_KNN, results='markup'}
 library("gmodels")
 churnPredCross <- CrossTable(cus_test_y, pred, prop.chisq = FALSE)
 ```
