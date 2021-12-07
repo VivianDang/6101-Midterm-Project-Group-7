@@ -92,19 +92,9 @@ summary(logistic_all)
 xkabledply(logistic_all)
 
 ```
-```{r 1.1Logistic Regression}
-logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
-                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
-                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
-                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
-                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
-summary(logistic_all)
-xkabledply(logistic_all)
-
-```
 Delete `gender`
 
-```{r 1.1Logistic Regression}
+```{r 1.2Logistic Regression}
 logistic_1 = glm(Churn ~ SeniorCitizen + Partner + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -116,7 +106,7 @@ xkabledply(logistic_1)
 ```
 Delete `Partner`
 
-```{r 1.1Logistic Regression}
+```{r 1.3Logistic Regression}
 logistic_2 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + PhoneService + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -128,7 +118,7 @@ xkabledply(logistic_2)
 ```
 Delete `PhoneService`
 
-```{r 1.1Logistic Regression}
+```{r 1.4Logistic Regression}
 logistic_3 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + MultipleLines + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -140,7 +130,7 @@ xkabledply(logistic_3)
 ```
 Delete `MultipleLines`
 
-```{r 1.1Logistic Regression}
+```{r 1.5Logistic Regression}
 logistic_4 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
@@ -153,7 +143,7 @@ xkabledply(logistic_4)
 Delete `OnlineBackup`
 
 
-```{r 1.1Logistic Regression}
+```{r 1.6Logistic Regression}
 logistic_5 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + DeviceProtection + TechSupport + StreamingTV
@@ -165,7 +155,7 @@ xkabledply(logistic_5)
 ```
 Delete `DeviceProtection`
 
-```{r 1.1Logistic Regression}
+```{r 1.7Logistic Regression}
 logistic_6 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + TechSupport + StreamingTV
@@ -177,7 +167,7 @@ xkabledply(logistic_6)
 ```
 Delete `PaymentMethod`
 
-```{r 1.1Logistic Regression}
+```{r 1.8Logistic Regression}
 logistic_7 = glm(Churn ~ SeniorCitizen + Dependents + tenure
                          + InternetService + OnlineSecurity
                          + TechSupport + StreamingTV
@@ -241,4 +231,4 @@ ChurnLogitpr2 = pR2(logistic_7)
 ChurnLogitpr2
 unloadPkg("pscl") 
 ```
-With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 27.8% of the variations in y is explained by the explanatory variables in the model. 
+With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 27.8% of the variations in y is explained by the explanatory variables in the model.
