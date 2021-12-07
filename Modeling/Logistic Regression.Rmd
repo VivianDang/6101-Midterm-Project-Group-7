@@ -1,0 +1,234 @@
+---
+title: "Telco Customer Churn Project"
+author: "Group7-Bug Tornado"
+#date: "today"
+date: "`r Sys.Date()`"
+# this style requires installing rmdformats package 
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r init, include=FALSE}
+# some of common options (and the defaults) are: 
+# include=T, eval=T, echo=T, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+library(ezids)
+library(ggplot2)
+library(ggpubr)
+# knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+knitr::opts_chunk$set(warning = F, results = "hide", message = F)
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
+# ‘scipen’: integer. A penalty to be applied when deciding to print numeric values in fixed or exponential notation.  Positive values bias towards fixed and negative towards scientific notation: fixed notation will be preferred unless it is more than ‘scipen’ digits wider.
+# use scipen=999 to prevent scientific notation at all times
+```
+
+# Telco Customer Churn
+## Description
+The Telco customer churn data contains information about a telephone company that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. It indicates which customers have left, stayed, or signed up for their service.  
+Studying such data can help companies identify the characteristics of lost customers, identify potential, soon-to-be-lost customers and develop appropriate strategies to retain them.  
+The dataset is WA_Fn-UseC_-Telco-Customer-Churn.csv.  
+
+### variables
+
+* `gender`: Female or Male
+* `SeniorCitizen`: customer is a senior citizen or not (Yes, No)
+* `Partner`: customer has a partner or not (Yes, No)
+* `Dependents`: customer has dependents or not (Yes, No)
+* `tenure`: number of months the customer has stayed with the company
+* `PhoneService`: customer has a phone service or not (Yes, No)
+* `MultipleLines`: customer has multiple lines or not (Yes, No, No phone service)
+* `InternetService`: customer’s internet service provider (DSL, Fiber optic, No)
+* `OnlineSecurity`: customer has online security or not (Yes, No, No internet service)
+* `OnlineBackup`: customer has online backup or not (Yes, No, No internet service)
+* `DeviceProtection`: customer has device protection or not (Yes, No, No internet service)
+* `TechSupport`: customer has tech support or not (Yes, No, No internet service)
+* `StreamingTV`: customer has streaming TV or not (Yes, No, No internet service)
+* `StreamingMovies`: customer has streaming movies or not (Yes, No, No internet service)
+* `Contract`: contract term of the customer (Month-to-month, One year, Two year)
+* `PaperlessBilling`: customer has paperless billing or not (Yes, No)
+* `PaymentMethod`: Electronic check, Mailed check, Bank transfer (automatic), Credit card (automatic)
+* `MonthlyCharges`: amount charged monthly
+* `TotalCharges`: total amount charged
+* `Churn`: customer churned or not (Yes or No)
+
+```{r import, include=FALSE}
+customer <- data.frame(read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv"))
+str(customer)
+#head(customer)
+```
+
+```{r asfactor, include=FALSE}
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customer[,i] = factor(customer[,i])
+  }
+}
+levels(customer$SeniorCitizen) <- c("No", "Yes") # no=1, yes=2
+str(customer)
+```
+
+```{r cleanNA, include=FALSE}
+summary(customer)  # there are 11 NA in TotalCharges
+customer <- na.omit(customer)
+sum(is.na(customer))
+```
+
+```{r 1.1Logistic Regression}
+logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_all)
+xkabledply(logistic_all)
+
+```
+Delete `gender`
+
+```{r 1.2Logistic Regression}
+logistic_1 = glm(Churn ~ SeniorCitizen + Partner + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_1)
+xkabledply(logistic_1)
+
+```
+Delete `Partner`
+
+```{r 1.3Logistic Regression}
+logistic_2 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_2)
+xkabledply(logistic_2)
+
+```
+Delete `PhoneService`
+
+```{r 1.4Logistic Regression}
+logistic_3 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_3)
+xkabledply(logistic_3)
+
+```
+Delete `MultipleLines`
+
+```{r 1.5Logistic Regression}
+logistic_4 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_4)
+xkabledply(logistic_4)
+
+```
+Delete `OnlineBackup`
+
+
+```{r 1.6Logistic Regression}
+logistic_5 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_5)
+xkabledply(logistic_5)
+
+```
+Delete `DeviceProtection`
+
+```{r 1.7Logistic Regression}
+logistic_6 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_6)
+xkabledply(logistic_6)
+
+```
+Delete `PaymentMethod`
+
+```{r 1.8Logistic Regression}
+logistic_7 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_7)
+xkabledply(logistic_7)
+
+```
+Now all variables are significant.
+
+```{r exp}
+expcoeff1 = exp(coef(logistic_7))
+summary(expcoeff1)
+xkabledply( as.table(expcoeff1), title = "Exponential of coefficients in Churn" )
+
+```
+
+#### Confusion matrix 
+```{r confusionMatrix, results='markup'}
+loadPkg("regclass")
+confusion_matrix(logistic_7)
+xkabledply( confusion_matrix(logistic_7), title = "Confusion matrix from Logit Model" )
+unloadPkg("regclass")
+```
+
+```{r confusion matrix, results=T}
+loadPkg("regclass")
+cfmatrix1 = confusion_matrix(logistic_7)
+accuracy1 <- (cfmatrix1[1,1]+cfmatrix1[2,2])/cfmatrix1[3,3]
+precision1 <- cfmatrix1[2,2]/(cfmatrix1[2,2]+cfmatrix1[1,2])
+recall1 <- cfmatrix1[2,2]/(cfmatrix1[2,2]+cfmatrix1[2,1])
+specificity1 <- cfmatrix1[1,1]/(cfmatrix1[1,1]+cfmatrix1[1,2])
+F1_score1 <- 2*(precision1)*(recall1)/(precision1 + recall1)
+accuracy1
+precision1
+recall1
+specificity1
+F1_score1
+```
+From confusion matrix, we can conclude that 
+Accuracy =`r accuracy1`
+Precision=`r precision1`
+Recall=`r recall1`
+Specificity=`r specificity1`
+F1 score=`r F1_score1`
+
+```{r roc_auc, results=T}
+loadPkg("pROC") 
+prob=predict(logistic_7, type = "response" )
+customer$prob=prob
+h = roc(Churn~prob, data=customer)
+auc(h) 
+plot(h)
+```
+We have here the area-under-curve of `r auc(h)`, which is greater than 0.8. The model is considered a good fit.
+
+```{r McFadden, results=T}
+loadPkg("pscl")
+ChurnLogitpr2 = pR2(logistic_7)
+ChurnLogitpr2
+unloadPkg("pscl") 
+```
+With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 27.8% of the variations in y is explained by the explanatory variables in the model.
