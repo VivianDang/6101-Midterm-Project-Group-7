@@ -4,14 +4,16 @@ author: "Group7-Bug Tornado"
 #date: "today"
 date: "`r Sys.Date()`"
 # this style requires installing rmdformats package 
-output:  
-    rmdformats::readthedown:
-      toc_float: true
-      toc_depth: 3
-      number_sections: true
-      code_folding: hide
-      includes:
-        before_body: header.html
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
 ---
 
 ```{r init, include=FALSE}
