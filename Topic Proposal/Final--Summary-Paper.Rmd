@@ -834,7 +834,7 @@ tab <- as.table(tab)
 xkabledply(tab, "Models Comparison")
 ```
 `r xkabledply(tab, "Models Comparison")`  
-A comparison between both KNN models and the Logistic models shows clearly the Logistic model is generally better then KNN in this case by higher scores in both `accuracy` and `recall rate`.  
+A comparison between both KNN models and the Logistic models shows clearly the Logistic model is generally better than KNN in this case by higher scores in both `accuracy` and `recall rate`.  
 
 ```{r}
 unloadPkg("class")
@@ -1174,6 +1174,14 @@ plot(performance(x.tree.prob, "tpr", "fpr"), , col=3, add=TRUE)
 # plot(performance(x.knn.prob, "tpr", "fpr"), , col=2, add=TRUE)
 
 
+```
+
+```{r ,results='markup'}
+tab <- matrix(c( 0.806,0.539,0.672,0.598,0.791,0.630,0.481,0.546,0.804,0.655,0.553,0.6, 0.793,0.474,0.651,0.549), ncol=4, byrow = TRUE)
+colnames(tab) <- c("Accuracy", "Precision", "Recall", "F-1")
+rownames(tab) <- c("SVM", "KNN with selected variables", "Logistic with selected variables","Classification Tree with selected variables")
+tab <- as.table(tab)
+xkabledply(tab, "Models Comparison")
 ```
 
 Even though SVM model won the evaluation according to the accuracy among these model, we still have to choose logistic regression model as our best classification model because of its performance on the ROC Plot and its interpretability.
