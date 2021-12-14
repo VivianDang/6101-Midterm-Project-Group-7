@@ -461,7 +461,7 @@ c4 <- ggplot(customer, aes(x=contract_jitter, y=DeviceProtection_jitter, color=C
 These 4 variables (`Online Security` & `Tech Support` & `Online Backup` & `Device Protection`) are probably influence, because we find that when customer do not have anyone of them, they are more likely to churn if they have a month-to-month `contract`, except `Device Protectio`n. The result shows that there are many people have `Device Protection` and month-to-month `contract` but still churn, even though the amount of these customers is less than the one who have no `Device Protection`.
 
 # Chapter 6: Model Comparison 
-## 6.1 Logistic Regression
+## Logistic Regression
 The first model will be presented is logistic regression. The dataset has 19 variables, and first thing to do is feature selection. Firstly, we tried to use best glm to select out significant variables, but the variable within the dataset is more than 15. Therefore, we used logistic regression to remove the variables one by one instead of using best glm. We set alpha equals 0.1 which means we would remove the variables with p-value bigger than 0.1. Here is the first table after covering all variables. 
 ```{r 1.1Logistic Regression}
 logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
@@ -560,14 +560,14 @@ xkabledply(logistic_7)
 ```
 The method is prolix, but fortune we got the final model after doing seven times. There are seven variables removed from the dataset. They have p-value bigger than 0.1. They are gender, partner, phone service, multiple lines, online backup, device protection, and payment method. Right now we can do next steps to analyze the models. 
 
-```{r exp}
+```{r exp results=T}
 expcoeff1 = exp(coef(logistic_7))
 summary(expcoeff1)
 xkabledply( as.table(expcoeff1), title = "Exponential of coefficients in Churn" )
 
 ```
 For exponential of coefficients, there are five variables having positive effect on dependent variables `Churn`, and six having negative effect. For example, if people have tech support, they will have more possibility to remain instead of leaving. 
-#### Confusion matrix 
+### Confusion matrix 
 ```{r confusionMatrix, results='markup'}
 loadPkg("regclass")
 confusion_matrix(logistic_7)
@@ -595,7 +595,7 @@ Precision=`r precision1`
 Recall=`r recall1`
 Specificity=`r specificity1`
 F1 score=`r F1_score1`
-
+### ROC and AUC
 ```{r roc_auc, results=T}
 loadPkg("pROC") 
 prob=predict(logistic_7, type = "response" )
@@ -605,7 +605,7 @@ auc(h)
 plot(h)
 ```
 We have here the area-under-curve of `r auc(h)`, which is greater than 0.8. The model is considered a good fit.
-
+### McFadden
 ```{r McFadden, results=T}
 loadPkg("pscl")
 ChurnLogitpr2 = pR2(logistic_7)
@@ -838,6 +838,9 @@ unloadPkg("gmodels")
 
 ## 6.3 Classification Tree
 
+The third model is Classification Tree model. We could use the classification tree model to predict the customer churn or not churn visually. It is very convenient. And we will discuss the performance of this model below.
+
+First step, cleaning the dataset for preparing to build the model. Convert the categorical variables to numerical variables. And delete the CustomerID, which has no relationship to the customer churn rate. 
 ```{r}
 customerNum = customer
 # convert categorical variable as numeric 
@@ -850,21 +853,16 @@ for(i in 2:20){
 customerNum <- subset(customerNum, select = -customerID)
 ```
 
-
-
-```{r Classification Tree feature selection}
+Then we did the feature selection. We created a list of feature importance based on mean decreasing gini of all the features. And as we can see from the picture, we choosed the top 6 features to build this classification tree model.
+```{r Classification Tree feature selection, results=TRUE}
 library(randomForest)
 fit_im = randomForest(customerNum$Churn~., data=customerNum)
 # Create an importance based on mean decreasing gini
-# importance(fit_im)
+importance(fit_im)
 varImpPlot(fit_im)
 ```
 
-From the sorted importance picture, we can select the top 6 features to build the tree model.  
-
-
-Then, firstly, try to find the best depths.
-
+Next, we try to find the best depths in this model. We tried different depths and summary the results
 ```{r Classification Tree depths result}
 loadPkg("rpart")
 loadPkg("caret")
@@ -891,16 +889,13 @@ for (deep in 2:8) {
 unloadPkg("caret")
 ```
 
-
-The summarized result is here:
-
-```{r , results="asis"}
+As we can see from the results, from the depths 5, the accuracy of different depths is almost same. Therefore, we choosed the depths 5 to build the tree model. 
+```{r , results="asis", results=TRUE}
 xkabledply(confusionMatrixResultDf, title="Churn Classification Trees summary with varying MaxDepth")
 ```
 
-From depths 5, the accuracy is almost same, therefore, we choose depths 5 to build the classification tree model.
-
-```{r , echo = T, fig.dim=c(6,4)}
+Then we built this classification tree model and plot it.
+```{r , echo = T, fig.dim=c(6,4), results=TRUE}
 set.seed(1)
 Churnfit <- rpart(Churn ~ TotalCharges + MonthlyCharges + tenure + Contract +  OnlineSecurity + PaymentMethod, data=customerNum, method="class", control = list(maxdepth = 5) )
 
@@ -919,9 +914,9 @@ text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
 post(Churnfit, file = "ChurnTree2.ps", title = "Classification Tree for Churn")
 ```
 
-
-
-```{r , include=T}
+## Results and confusion matrix
+And these are the summary results of this model and its confusion matrix.
+```{r , include=T, results=TRUE}
 loadPkg("caret") 
 cm = confusionMatrix( predict(Churnfit, type = "class") , reference = customerNum[, "Churn"])
 print('Overall: ')
@@ -931,26 +926,21 @@ cm$byClass
 unloadPkg("caret")
 ```
 
-
-The overall accuracy is `r round(cm$overall["Accuracy"]*100, digits=2)`%. These are the same metrics of sensitivity (also known as recall rate, TP / (TP+FN) ), specificity (TN / (TN+FP) ), F1 score, and others that we used in Logistic Regression and KNN analyses. Indeed, any "classifiers" can use the confustion matrix approach as one of the evaluation tools. 
-
-
 ```{r Classification Tree, results="asis"}
 xkabledply(cm$table, "confusion matrix")
 ```
 
-Next, we can try two other ways to plot the tree, with library `rpart.plot` and a "fancy" plot using the library `rattle`.
-
-```{r Classification Tree fancyplot}
+## Tree plot
+We also tried two other ways to plot the tree, with library `rpart.plot` and a "fancy" plot using the library `rattle` to make the tree plot more beautifully. 
+```{r Classification Tree fancyplot, results=TRUE}
 loadPkg("rpart.plot")
 rpart.plot(Churnfit)
 loadPkg("rattle") 
 fancyRpartPlot(Churnfit)
 ```
 
-Then we can prune the tree.
-
-```{r Classification Tree prune}
+We could also prune the tree. 
+```{r Classification Tree prune, results=TRUE}
 #prune the tree 
 Churnfit <- prune(Churnfit, cp = Churnfit$cptable[2,"CP"])
 
@@ -961,19 +951,19 @@ plot(Churnfit, uniform=TRUE, main="Pruned Classification Tree for Churn")
 text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
 ```
 
-
-
-```{R ROC curve of Classification Tree}
-# library(rpart)
-# rp <- rpart(Churn ~ ., data = customerNum)
-library(ROCR)
-tree.predict.prob = predict(Churnfit, type = "prob")
-tree.pred <- prediction(tree.predict.prob[, 2], customerNum$Churn)
-plot(performance(tree.pred, "tpr", "fpr"), main = "ROC of tree")
-auc = performance(tree.pred, 'auc')
+## ROC curve
+Finally, we also checked the ROC and AUC of this classification tree model. As we can see, this model is kind of a good model.  
+```{R ROC curve of Classification Tree, results=TRUE}
+library(rpart)
+rp <- rpart(Churn ~ ., data = customerNum)
+library(pROC)
+pred <- prediction(predict(Churnfit, type = "prob")[, 2], customerNum$Churn)
+plot(performance(pred, "tpr", "fpr"), main = "ROC Churn")
+auc = performance(pred, 'auc')
 slot(auc, 'y.values')
 abline(0, 1, lty = 2)
 ```
+
 
 ## 6.4 SVM
 
