@@ -559,8 +559,8 @@ xkabledply(logistic_7)
 
 ```
 The method is prolix, but fortune we got the final model after doing seven times. There are seven variables removed from the dataset. They have p-value bigger than 0.1. They are gender, partner, phone service, multiple lines, online backup, device protection, and payment method. Right now we can do next steps to analyze the models. 
-
-```{r exp results=T}
+## Coefficient Exponential 
+```{r exp, results=T}
 expcoeff1 = exp(coef(logistic_7))
 summary(expcoeff1)
 xkabledply( as.table(expcoeff1), title = "Exponential of coefficients in Churn" )
