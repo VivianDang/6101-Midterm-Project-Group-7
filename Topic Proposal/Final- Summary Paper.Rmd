@@ -914,7 +914,7 @@ text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
 post(Churnfit, file = "ChurnTree2.ps", title = "Classification Tree for Churn")
 ```
 
-## Results and confusion matrix
+### Classification tree results and confusion matrix
 And these are the summary results of this model and its confusion matrix.
 ```{r , include=T, results=TRUE}
 loadPkg("caret") 
@@ -930,7 +930,7 @@ unloadPkg("caret")
 xkabledply(cm$table, "confusion matrix")
 ```
 
-## Tree plot
+### Tree plot
 We also tried two other ways to plot the tree, with library `rpart.plot` and a "fancy" plot using the library `rattle` to make the tree plot more beautifully. 
 ```{r Classification Tree fancyplot, results=TRUE}
 loadPkg("rpart.plot")
@@ -951,7 +951,7 @@ plot(Churnfit, uniform=TRUE, main="Pruned Classification Tree for Churn")
 text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
 ```
 
-## ROC curve
+### ROC curve
 Finally, we also checked the ROC and AUC of this classification tree model. As we can see, this model is kind of a good model.  
 ```{R ROC curve of Classification Tree, results=TRUE}
 library(rpart)
