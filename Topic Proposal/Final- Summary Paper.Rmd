@@ -956,7 +956,7 @@ Finally, we also checked the ROC and AUC of this classification tree model. As w
 ```{R ROC curve of Classification Tree, results=TRUE}
 library(rpart)
 rp <- rpart(Churn ~ ., data = customerNum)
-library(pROC)
+library(ROCR)
 pred <- prediction(predict(Churnfit, type = "prob")[, 2], customerNum$Churn)
 plot(performance(pred, "tpr", "fpr"), main = "ROC Churn")
 auc = performance(pred, 'auc')
