@@ -21,7 +21,7 @@ library(ezids)
 library(ggplot2)
 library(ggpubr)
 # knitr::opts_chunk$set(warning = F, results = "markup", message = F)
-knitr::opts_chunk$set(warning = F, results = "hide", message = F, echo = F)
+knitr::opts_chunk$set(warning = F, results = "hide", message = F, echo = T)
 options(scientific=T, digits = 3) 
 # options(scipen=9, digits = 3) 
 # ‘scipen’: integer. A penalty to be applied when deciding to print numeric values in fixed or exponential notation.  Positive values bias towards fixed and negative towards scientific notation: fixed notation will be preferred unless it is more than ‘scipen’ digits wider.
@@ -614,9 +614,11 @@ unloadPkg("pscl")
 ```
 With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 27.8% of the variations in y is explained by the explanatory variables in the model.
 
-## 6.2 KNN
+## KNN
 
-```{r Into Numeric}
+We could use K-nearest-neighbor algorithm to predict whether customer `X` will churn, by looking at `X`'s K neighbors who share similar attributes with him.  
+
+```{r Into Numeric, echo=FALSE}
 customerNum = customer
 # convert categorical variable as numeric 
 for(i in 2:21){
@@ -627,21 +629,43 @@ for(i in 2:21){
 }
 customerNum$customerID = NULL
 str(customerNum)
-```
 
-```{r preproccessing}
 customer_final=customerNum
-customer_final$Churn <-  factor(customer_final$Churn)
+customer_final$Churn <- factor(customer_final$Churn)
 str(customer_final)
-cusKNN <- subset(customer_final, select=c(SeniorCitizen, Partner, Dependents, PaperlessBilling, OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport, Contract, tenure, MonthlyCharges, Churn))
-str(cusKNN)
-cus_scale = cusKNN
-cus_scale[10:11]<- scale(cusKNN[10:11], center = TRUE, scale = TRUE)
-cus_scale$Churn <- customer_final$Churn
-str(cus_scale)
 ```
 
-```{r selectk}
+### Center and Scale  
+
+```{r KNNfull}
+fullScale = customer_final
+fullScale[c(5, 18, 19)]<- scale(fullScale[c(5, 18, 19)], center = TRUE, scale = TRUE)
+str(fullScale)
+set.seed(1)
+customer_sampe <- sample(2, nrow(fullScale), replace=TRUE, prob=c(0.75, 0.25))
+cus_train_full <- fullScale[customer_sampe==1, 1:19]
+cus_test_full <- fullScale[customer_sampe==2, 1:19]
+# y
+cus_train_full_y <- fullScale[customer_sampe==1, 20]
+cus_test_full_y <- fullScale[customer_sampe==2, 20]
+
+str(cus_train_full)
+str(cus_test_full)
+```
+
+In order to use `KNN` with our dataset, we convert all categorical variables to numeric first. Notice that the categorical variables now have values in range [1, 4] while the numerical variables have a various range and they are much larger than [1, 4]. This is where we need scaling. So let's scale these numerical variables, and our dataset now looks like:  
+```{r 6.2.1, results='markup'}
+str(fullScale)
+``` 
+
+### KNN with all variables  
+
+At first, let's start modeling with all 19 variables. Make a train test split for our scaled dataset at 3:1, where the train set has `5185` observations and test set has `1847` observations.  
+
+### Select K  
+
+What should be our best `k` value to build KNN model?  
+```{r func selectk, echo=FALSE}
 loadPkg("class")
 chooseK = function(k, train_set, val_set, train_class, val_class){
   
@@ -664,26 +688,6 @@ chooseK = function(k, train_set, val_set, train_class, val_class){
   cbind(k = k, accuracy = accu)
 }
 ```
-
-```{r KNNfull}
-fullScale = customer_final
-fullScale[c(5, 18, 19)]<- scale(fullScale[c(5, 18, 19)], center = TRUE, scale = TRUE)
-str(fullScale)
-set.seed(1)
-customer_sampe <- sample(2, nrow(fullScale), replace=TRUE, prob=c(0.75, 0.25))
-cus_train_full <- fullScale[customer_sampe==1, 1:19]
-cus_test_full <- fullScale[customer_sampe==2, 1:19]
-# y
-cus_train_full_y <- fullScale[customer_sampe==1, 20]
-cus_test_full_y <- fullScale[customer_sampe==2, 20]
-```
-Prepossessing the dataset: scale and centered the numerical variables, convert categorical variables as numeric.  
-
-```{r results='markup'}
-str(cus_train_full)
-str(cus_test_full)
-```
-
 ```{r selectionfull}
 knn_full_different_k = sapply(seq(1, 21, by = 2),  #<- set k to be odd number from 1 to 21
                          function(x) chooseK(x, 
@@ -705,21 +709,46 @@ ggplot(knn_full_different_k,
   labs(title = "accuracy vs k")
 xkabledply((knn_full_different_k))
 ```
-Select value `k=15`  
+`r xkabledply(knn_full_different_k)`  
+It seems that `k=15` should be our best selection here, because it has the most improvement before accuracy approaching `0.787`.  
 
 ```{r KNNfull2}
 pred_full <- knn(train = cus_train_full, test = cus_test_full, cl=cus_train_full_y, k=15)
 pred_full
 ```
 
-```{r confusion_matrix_full, results=T}
+### Evaluation
+
+After we build the model, let's look at its result:  
+
+```{r confusion_matrix_full, results='markup'}
 loadPkg("gmodels")
 churnPredCross <- CrossTable(cus_test_full_y, pred_full, prop.chisq = FALSE)
 ```
 
+Over the `1847` test observations, this model correctly predicts `1196` customers will `not churn` and `256` correctly `churn`. 
+
+* Accuracy = 0.776  
+* Precision = 0.583  
+* Recall = 0.498  
+* Specification = 0.874  
+* F1 Score = 0.537  
+The overall accuracy of 77.6%, which is not bad, but the recall rate is less than 50%, meaning we even don't have half a chance of predicting correctly if this customer indeed churned.  
+So could we build a better model?
+
 ### KNN with selected variables  
 
-Prepossessing the dataset: scale and centered the numerical variables, convert categorical variables as numeric.
+Let's consider building our KNN model with fewer variables.  
+```{r}
+cusKNN <- subset(customer_final, select=c(SeniorCitizen, Partner, Dependents, PaperlessBilling, OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport, Contract, tenure, MonthlyCharges, Churn))
+str(cusKNN)
+cus_scale = cusKNN
+cus_scale[10:11]<- scale(cusKNN[10:11], center = TRUE, scale = TRUE)
+cus_scale$Churn <- customer_final$Churn
+str(cus_scale)
+```
+
+Select `11` variables that have significant affect according to previous EDA section:  
 ```{r results='markup'}
 str(cus_scale)
 ```
@@ -734,10 +763,15 @@ cus_train_y <- cus_scale[customer_sampe==1, 12]
 cus_test_y <- cus_scale[customer_sampe==2, 12]
 ```
 
-```{r, results='markup'}
+```{r}
 str(cus_train)
 str(cus_test)
 ```
+
+### Select K
+
+Repeat the same scaling and train test split steps as above.  
+Now select our best `k` value.  
 
 ```{r selection}
 knn_different_k = sapply(seq(1, 21, by = 2),  #<- set k to be odd number from 1 to 21
@@ -763,17 +797,39 @@ ggplot(knn_different_k,
   labs(title = "accuracy vs k")
 xkabledply((knn_different_k))
 ```
-Select value `k=11`  
+`r xkabledply(knn_different_k)`  
+We should better select value `k=11` here as it has the highest accuracy.  
+
 ```{r KNN}
 pred <- knn(train = cus_train, test = cus_test, cl=cus_train_y, k=11)
 knn.roc.prob <- attr(knn(train = cus_train, test = cus_test, cl=cus_train_y, k=11,prob = T),'prob')
 pred
 ```
 
+### Evaluation
+
 ```{r confusion_matrix_KNN, results='markup'}
 library("gmodels")
 churnPredCross <- CrossTable(cus_test_y, pred, prop.chisq = FALSE)
 ```
+* Accuracy = 0.791
+* Precision = 0.630
+* Recall = 0.481
+* Specification = 0.9
+* F1 Score = 0.546  
+The overall accuracy improves a bit than previous KNN model, but the recall rate does not improve. One possible reason here is our dataset is unbalanced -- much more `not churned` customers than `churned` customers. To fix unbalance, one should explore a better cut-off value.  
+
+### Comparison
+
+```{r}
+tab <- matrix(c(0.776,0.583,0.498,0.537,0.791,0.630,0.481,0.546,0.804,0.655,0.553,0.6), ncol=4, byrow = TRUE)
+colnames(tab) <- c("Accuracy", "Precision", "Recall", "F-1")
+rownames(tab) <- c("KNN with all variables", "KNN with selected variables", "Logistic with selected variables")
+tab <- as.table(tab)
+xkabledply(tab, "Models Comparison")
+```
+`r xkabledply(tab, "Models Comparison")`  
+A comparison between both KNN models and the Logistic models shows clearly the Logistic model is generally better then KNN in this case by higher scores in both `accuracy` and `recall rate`.  
 
 ```{r}
 unloadPkg("class")
