@@ -211,7 +211,7 @@ text(Churnfit, use.n=TRUE, all=TRUE, cex=.8)
 ```{R ROC curve of Classification Tree}
 library(rpart)
 rp <- rpart(Churn ~ ., data = customerNum)
-library(pROC)
+library(ROCR)
 pred <- prediction(predict(Churnfit, type = "prob")[, 2], customerNum$Churn)
 plot(performance(pred, "tpr", "fpr"), main = "ROC Churn")
 auc = performance(pred, 'auc')
