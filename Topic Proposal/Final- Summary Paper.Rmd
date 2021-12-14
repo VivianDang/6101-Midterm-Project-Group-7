@@ -956,8 +956,9 @@ Finally, we also checked the ROC and AUC of this classification tree model. As w
 ```{R ROC curve of Classification Tree, results=TRUE}
 library(rpart)
 rp <- rpart(Churn ~ ., data = customerNum)
-library(pROC)
+library(ROCR)
 pred <- prediction(predict(Churnfit, type = "prob")[, 2], customerNum$Churn)
+tree.predict.prob <- predict(Churnfit, type = "prob")[, 2]
 plot(performance(pred, "tpr", "fpr"), main = "ROC Churn")
 auc = performance(pred, 'auc')
 slot(auc, 'y.values')
@@ -1161,7 +1162,7 @@ x.glm.perf <- performance(x.glm.prob.rocr, "tpr","fpr")
 plot(x.glm.perf, col=1, add=TRUE)
 
 #tree
-x.tree.prob <- prediction(tree.predict.prob[, 2], customerNum$Churn)
+x.tree.prob <- prediction(tree.predict.prob, customerNum$Churn)
 plot(performance(x.tree.prob, "tpr", "fpr"), , col=3, add=TRUE)
 
 #knn
@@ -1174,3 +1175,36 @@ plot(performance(x.tree.prob, "tpr", "fpr"), , col=3, add=TRUE)
 Even though SVM model won the evaluation according to the accuracy among these model, we still have to choose logistic regression model as our best classification model because of its performance on the ROC Plot and its interpretability.
 
 #Chpter 7 Conclusion
+## Question 1: What are the factors that influence attrition? What are the characteristics of the churn-prone population?
+
+1. The factors that influence churn are: age of the customer, married or not, family or not, phone service or not, internet provider or not, internet add-on service or not, contract signing agreement, billing method, payment method, length of time on the network, monthly consumption
+
+2. The characteristics of the churn-prone group are: old group, single people, no family members, phone service, fiber optic, no Internet add-on service, monthly contract signing, paperless billing, electronic payment, monthly consumption of $70-110, time on the network of 0-6 months
+
+3. Combined with the above analysis, subscriber churn in telecommunication companies is mainly due to two reasons.
+
+a. the network services provided by the company, especially Fiber optic network services may make the user experience poor. In this part of users, the churn rate is high.
+
+b. The high churn rate of the telecommunication company as a whole is caused by the large number of new subscribers. In particular, churn is most severe among subscribers who have been on the network for 6 months or less.
+
+## Question 2: Retention suggestions for high churn user base
+
+1. Improve services, improve basic network services and enhance users' experience.
+
+2. Implement preferential programs.
+
+a. Provide pulling new subsidy discount service to all users, for each new user introduced to the company, then provide a certain fee reduction.  While acquiring new users, increase the loyalty of old users.
+b. Provide a fee waiver or other free services to each new user. Increase the retention rate of new users.
+c. Lead users to change the way they sign contracts through the discount program, and lead users who sign contracts by month (Month-to-Month) to those who sign contracts by year.
+
+3. Provide simple and convenient services for elderly users to reduce the loss of this user group.
+
+4. Improve the payment process, especially the electronic check channel.
+
+## Question 3: Construct a churn classifier and output the probability that it is a churned user
+
+From the test results, the SVM model has the highest accuracy of 80.6%, indicating that 80.6% of the samples are marked correctly. The recall rate of 67.2% indicates that the users who are marked as churned account for 67.2% of the actual churned users, which means that 32.8% of the potential churned users will be missed, and we need more churned user data to train the classifier, which can improve the recall rate. The validation set performs better than the test set in terms of recall, and the model generalizes well.
+
+
+
+
