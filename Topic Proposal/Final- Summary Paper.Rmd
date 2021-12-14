@@ -1,0 +1,615 @@
+---
+title: "Telco Customer Churn Project: Summary Paper"
+author: "Group7-Bug Tornado"
+#date: "today"
+date: "`r Sys.Date()`"
+# this style requires installing rmdformats package 
+output:  
+    rmdformats::readthedown:
+      toc_float: true
+      toc_depth: 3
+      number_sections: true
+      code_folding: hide
+      includes:
+        before_body: header.html
+---
+
+```{r init, include=FALSE}
+# some of common options (and the defaults) are: 
+# include=T, eval=T, echo=T, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+library(ezids)
+library(ggplot2)
+library(ggpubr)
+# knitr::opts_chunk$set(warning = F, results = "markup", message = F)
+knitr::opts_chunk$set(warning = F, results = "hide", message = F, echo = F)
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
+# ‘scipen’: integer. A penalty to be applied when deciding to print numeric values in fixed or exponential notation.  Positive values bias towards fixed and negative towards scientific notation: fixed notation will be preferred unless it is more than ‘scipen’ digits wider.
+# use scipen=999 to prevent scientific notation at all times
+```
+
+# Chapter 1: Introudction of Company 
+## Basic Information
+Telco Systems is a company which have been working on design and development of high-performance network communications over 40 years. It is the global leader in telecommunications, providing excellent telecommunication service for customers. The service includes 5G internet, networking slicing, and more on. In our group, all of us have not tried to analyze such a company in telecommunication field. 
+
+## Reason of Choosing Telco Systems
+The reason of choosing this company is that Telco provides large amount of home phone service and internet service. These two stuffs are unavoidable in contemporary society. People get used to take mobile phones to go outside, and they adapt to such a life with internet. When people stay at home, they spend majority of times with interenet no matter working or playing. We can say that people cannot leave internet nowadays. Therefore, the company which is providing these services are pretty crucial. Telco is a good company, but it also has some drawbacks. Not all users satisfy with service, so we want to know in what place Telco can make an improvement. We care about how customers say about Telco, and what they dislike. We are here to help the company to find specific problems, to avoid unnecessary customers churn. Through analyzing the company, we wonder what factors Telco can improve to let customers have greater experiences of using. The best way to know the using experience is based on customers' survey. Therefore, we choose a dataset about customers survey. 
+
+# Chapter 2: Description of Dataset
+## About Dataset
+The Telco customer churn data contains information about Telco that provided home phone and Internet services to 7043 customers in California at the end of 2017 Quarter 3. Data includes customers' basic information and it indicates which customers have left, stayed, or signed up for their service.  
+Studying such data can help companies identify the characteristics of lost customers, identify potential, soon-to-be-lost customers and develop appropriate strategies to retain them.  
+The dataset is WA_Fn-UseC_-Telco-Customer-Churn.csv.
+Before analyzing this dataset, we did some research about what churn represents, and why it is important to avoid churn in business. Churn in this dataset represents lost customers. Some people will be curious about why the company should spend time on retaining current customers or decreasing lost customers. In fact, acquire a new customer is much harder than retaining an existing customer. Company can pay for fewer price to retain existing customers rather than spend large amount of money on advertisement, and it is a profound strategy to maintain good reputation. Therefore, it is crucial to figure out current problems, and then to fix it up. 
+
+## Variables
+
+```{r import, include=FALSE}
+customer <- data.frame(read.csv("WA_Fn-UseC_-Telco-Customer-Churn.csv"))
+str(customer)
+#head(customer)
+```
+
+```{r asfactor, include=FALSE}
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customer[,i] = factor(customer[,i])
+  }
+}
+levels(customer$SeniorCitizen) <- c("No", "Yes") # no=1, yes=2
+str(customer)
+```
+
+```{r cleanNA, include=FALSE}
+summary(customer)  # there are 11 NA in TotalCharges
+customer <- na.omit(customer)
+sum(is.na(customer))
+```
+
+```{r results=TRUE}
+str(customer)
+```
+* `gender`: Female or Male
+* `SeniorCitizen`: customer is a senior citizen or not (Yes, No)
+* `Partner`: customer has a partner or not (Yes, No)
+* `Dependents`: customer has dependents or not (Yes, No)
+* `tenure`: number of months the customer has stayed with the company
+* `PhoneService`: customer has a phone service or not (Yes, No)
+* `MultipleLines`: customer has multiple lines or not (Yes, No, No phone service)
+* `InternetService`: customer’s internet service provider (DSL, Fiber optic, No)
+* `OnlineSecurity`: customer has online security or not (Yes, No, No internet service)
+* `OnlineBackup`: customer has online backup or not (Yes, No, No internet service)
+* `DeviceProtection`: customer has device protection or not (Yes, No, No internet service)
+* `TechSupport`: customer has tech support or not (Yes, No, No internet service)
+* `StreamingTV`: customer has streaming TV or not (Yes, No, No internet service)
+* `StreamingMovies`: customer has streaming movies or not (Yes, No, No internet service)
+* `Contract`: contract term of the customer (Month-to-month, One year, Two year)
+* `PaperlessBilling`: customer has paperless billing or not (Yes, No)
+* `PaymentMethod`: Electronic check, Mailed check, Bank transfer (automatic), Credit card (automatic)
+* `MonthlyCharges`: amount charged monthly
+* `TotalCharges`: total amount charged
+* `Churn`: customer churned or not (Yes or No)
+
+For our exploratory data analysis, we did some preprocessing including cleaning up and converting. We dropped “NA” values from the dataset to simplify our analysis; we converted all variables into factor variables except `tenure`, `MonthlyCharges`, `TotalCharges`
+
+# Chapter 3: Categorical Variables EDA  
+
+A brief overview of the dataset tells that there are 1869 customers left the telephone service company and 5163 who didn't. Below we'll call these left customers as churned customers.  
+
+## Churn vs Not Churn
+### What are churned customers look like?
+
+```{r, include=FALSE}
+churn <- subset(customer, Churn=="Yes")
+stay <- subset(customer, Churn=="No")
+summary(churn)
+```
+```{r, include=FALSE}
+xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, Dependents, PhoneService, InternetService, PaperlessBilling)), title="Churned Customer Attributes")
+haveInt <- subset(churn, InternetService!="No")
+xkablesummary(subset(haveInt, select=c(OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport)))
+xkablesummary(subset(churn, select=c(Contract, PaymentMethod)), title="Churned Customer Attributes2")
+```
+Here we have picked out a few factors from the summary that have a significant difference between factor levels.  `r xkablesummary(subset(churn, select=c(SeniorCitizen, Partner, Dependents, PhoneService, InternetService, PaperlessBilling)), title="Churned Customer Attributes")`
+We see that most churned customers are `senior citizens`. Indeed, the age limit can cause them to leave. Also most churned customers have `no dependents`, which means they may be older and have their own considerations about choosing a phone company. From the table, we also see that most churned customers don't have a partner and have signed up for phone service and paperless billing. However, we cannot assume a direct reason at this time, so we'll talk about this later.  
+Customers who signed up for an internet service with `Fiber Optic` quit most. This may be because that they are not satisfied with Fiber Optic, but this speculation must be based on the assumption that total numbers of customers with Fiber Optic and DSL are nearly equal. From the summary, there are 2416 customers with DSL and 3096 customers with Fiber Optic, therefore, the speculation holds.  
+
+Then we want to take a deeper look into churned customers who have signed up for Internet Services.  `r xkablesummary(subset(haveInt, select=c(OnlineSecurity, OnlineBackup, DeviceProtection, TechSupport)), title="Attributes of Churned Customer with Internet Servies")`  
+Here we see significant impacts with these four internet service add-on. Most churned customers didn't sign up for these four add-on.  
+
+Now let's look at the `contract` and `payment method`.  
+`r xkablesummary(subset(churn, select=c(Contract, PaymentMethod)), title="Churned Customer Attributes2")`
+Most churned customers have short-term(month-to-month) contract and paid bills with electronic check.  
+
+### Contrast Churned with not Churned  
+Since the sample sizes of churned and not churned customers are different, we can't compare the numbers of customers directly for each attributes. Instead, we compare the percentage.  
+Here we see the factors that have a significant impact on customer churn or not. Just as we mentioned earlier, these factors also characterize most churned customers.  
+```{r, include=FALSE}
+haveIntAll <- subset(customer, InternetService!="No")
+```
+```{r}
+senior <- ggplot(customer, aes(x=SeniorCitizen, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Not senior", "Yes" = "Senior")) +
+                   labs(title="SeniorCitizen", x="", y="Percentage") +
+                   theme(legend.position="top")
+partner <- ggplot(customer, aes(x=Partner, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no partner", "Yes" = "Have a partner")) +
+                   labs(title="Partner", x="", y="Percentage") +
+                   theme(legend.position="top")
+dependent <- ggplot(customer, aes(x=Dependents, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "Have no dependents", "Yes" = "Have dependents")) +
+                   labs(title="Dependent", x="", y="Percentage") +
+                   theme(legend.position="top")
+internet_service <- ggplot(customer, aes(x=InternetService, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Internet services", x="Internet company", y="Percentage") +
+                   theme(legend.position="top")
+online_security <- ggplot(haveIntAll, aes(x=OnlineSecurity, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Online security", x="", y="Percentage") +
+                   theme(legend.position="top")
+online_backup <- ggplot(haveIntAll, aes(x=OnlineBackup, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Online backup", x="", y="Percentage") +
+                   theme(legend.position="top")
+device_protection <- ggplot(haveIntAll, aes(x=DeviceProtection, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Device protection", x="", y="Percentage") +
+                   theme(legend.position="top")
+tech_support <- ggplot(haveIntAll, aes(x=TechSupport, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Tech support", x="", y="Percentage") +
+                   theme(legend.position="top")
+contract <- ggplot(customer, aes(x=Contract, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   labs(title="Contract", x="Method", y="Percentage") +
+                   theme(legend.position="top")
+paperless_billing <- ggplot(customer, aes(x=PaperlessBilling, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("No" = "No paperless billing", "Yes" = "Have paperless billing")) +
+                   labs(title="Paperless billing", x="", y="Percentage") +
+                   theme(legend.position="top")
+payment_method <- ggplot(customer, aes(x=PaymentMethod, fill=Churn)) +
+                   geom_bar(position="fill") +
+                   scale_fill_manual(values=c("pink3", "steelblue")) +
+                   scale_x_discrete(labels=c("Bank transfer (automatic)" = "bank transfer", "Electronic check" = "E-check", "Credit card (automatic)" = "credit card")) +
+                   labs(title="Payment method", x="Method", y="Percentage") +
+                   theme(legend.position="top")
+ggarrange(senior, partner, dependent, paperless_billing)
+ggarrange(internet_service, online_security, online_backup, device_protection, tech_support)
+ggarrange(contract, payment_method, nrow=2, ncol=1)
+```
+Remember we previously talked about the partner, phone service and paperless bill, which we are unsure why they have an impact on customer churn, they also create differences between churned and not churned customers. Let's find out whether these factors have significant impacts on churn with tests.  
+
+## Chi-square Tests  
+We use $\chi^2$ test to test if two categorical variables are independent base on contingency table.  
+
+### Test Partner  
+
+```{r}
+churn_vs_partner = table(customer$Churn, customer$Partner)
+```
+Are they independent?  
+- $H_0$: churn and partner are independent.  
+- $H_1$: they are not independent. 
+```{r, results='markup'}
+chi_test1 = chisq.test(churn_vs_partner)
+chi_test1
+```
+Since p-value = `r format(chi_test1$p.value, scientific=T)` < 0.05, we reject null hypothesis, so `partner` actually has a significant impact on churn.  
+
+### Test PhoneService  
+
+```{r}
+churn_vs_phone = table(customer$Churn, customer$PhoneService)
+churn_vs_phone
+```
+Are they independent?  
+- $H_0$: churn and phone service are independent.  
+- $H_1$: they are not independent. 
+```{r, results='markup'}
+chi_test2 = chisq.test(churn_vs_phone)
+chi_test2
+```
+Since p-value = `r format(chi_test2$p.value, scientific=F)` > 0.05, we fail to reject null hypothesis, so `phone service` does not have a significant impact on churn.  
+
+### Test PaperlessBilling  
+
+```{r}
+churn_vs_bill = table(customer$Churn, customer$PaperlessBilling)
+churn_vs_bill
+```
+Are they independent?  
+- $H_0$: churn and paperless bill are independent.  
+- $H_1$: they are not independent. 
+```{r, results='markup'}
+chi_test3 = chisq.test(churn_vs_bill)
+chi_test3
+```
+Since p-value = `r format(chi_test3$p.value, scientific=T)` < 0.05, we reject null hypothesis, and `paperless bill` service has a significant impact on churn.  
+
+# Chapter 4: Continuous Variables EDA
+
+A brief overview of the dataset tells that there are 3 continuous variables, tenure, monthlycharges and totalcharges. 
+
+## KDE plot of continuous variables
+KDE plot is a Kernel Density Estimation Plot which depicts the probability density function of the continuous data variables. We can easily observe the distribution of samples with kde plot and when we want to compare the distributions of different samples, it won’t be affected by the samples' size.  
+```{r kdePlot}
+tenure_kdeplot <- ggplot(data = customer, aes(x = tenure, color = Churn)) + 
+            geom_density(aes(fill = Churn), alpha = 0.8) + 
+             scale_fill_manual(values=c("pink3", "steelblue")) +
+              labs(title="KDEplot for tenure") +
+               labs(x="tenure", y="density") +
+                theme(legend.position="top")
+tenure_kdeplot
+
+MonthlyCharges_kdeplot <- ggplot(data = customer, aes(x = MonthlyCharges, color = Churn)) + 
+                   geom_density(aes(fill = Churn), alpha = 0.8) + 
+                    scale_fill_manual(values=c("pink3", "steelblue")) +
+                     labs(title="KDEplot for MonthlyCharges") +
+                      labs(x="MonthlyCharges", y="density") +
+                       theme(legend.position="top")
+MonthlyCharges_kdeplot
+
+TotalCharges_kdeplot <- ggplot(data = customer, aes(x = TotalCharges, color = Churn)) + 
+                   geom_density(aes(fill = Churn), alpha = 0.8) + 
+                    scale_fill_manual(values=c("pink3", "steelblue")) +
+                     labs(title="KDEplot for TotalCharges") +
+                      labs(x="TotalCharges", y="density") +
+                       theme(legend.position="top")
+TotalCharges_kdeplot
+```
+
+As we can see from tenure_kdeplot, customers with lower `tenure` are more likely to churn. And from MonthlyCharges_kdeplot, customers with higher `monthlycharges` are also more likely to churn. From TotalCharges_kdeplot, we can find that churn customers and left customers have very similar distributions. From these 3 kde plots, which means, `tenure` may be negatively correlated with customer `churn` rates and `monthlycharges` may be positively correlated with customer `churn` rates. Finally, `totalcharges` may only make  a little attribution to customer `churn` rates.
+
+## Logistic regression 
+
+Logistic regression is the appropriate regression analysis to predict a binary outcome (the dependent variable) based on a set of independent variables.
+
+To verify the conclusion we drew from kde plots numerically, we use the logistic regression model to classify `churn` with different features.
+
+We can see from the anova test results. 
+```{r LogisticRegression,results = TRUE}
+lm1 <- glm(Churn~tenure, family = binomial(link = "logit"), data = customer)
+lm2 <- glm(Churn~tenure + MonthlyCharges, family = binomial(link = "logit"), data = customer)
+lm3 <- glm(Churn~tenure + MonthlyCharges + TotalCharges, family = binomial(link = "logit"), data = customer)
+anovat <- anova(lm1,lm2,lm3, test="LRT")
+anovat
+```
+model 2  is significantly better than model 1. However, model 3 is not under 99% significant level. Which means, model 3 may have not many improvements than model 2.
+
+## AUC and ROC Curve
+We can use AUC and ROC to measure model 2 and model 3. 
+AUC (Area Under The Curve) - ROC (Receiver Operating Characteristics) curve is a performance measurement for the classification problems at various threshold settings. ROC is a probability curve and AUC represents the degree or measure of separability. It tells how much the model is capable of distinguishing between classes. Higher the AUC, the better the model is at predicting 0 classes as 0 and 1 classes as 1. By analogy, the Higher the AUC, the better the model is at distinguishing between customer with left and churn.
+
+We can compare the ROC curves of two models.
+```{r AUClm2}
+prob <- predict(lm2,customer, type = c("response"))
+customer$prob <- prob
+library(pROC)
+g <- roc(Churn ~ prob, data = customer)
+plot(g, main = "ROC curve of model 2")
+auc(customer$Churn, prob)
+```
+```{r AUClm3}
+prob1 <- predict(lm3,customer, type = c("response"))
+customer$prob <- prob1
+library(pROC)
+g1 <- roc(Churn ~ prob1, data = customer)
+plot(g1, main = "ROC curve of model 2")
+auc(customer$Churn, prob1)
+```
+The two ROC curves are almost same. And the AUC of model 2 is `r auc(customer$Churn, prob)`, which means if we randomly choose a churn customer and a left customer, the probability of ranking churn customer higher than left customer is `r auc(customer$Churn, prob)`. AUC of model 3 is `r auc(customer$Churn, prob1)`.
+
+Therefore, `totalcharges` only makes a little attribution to improve the performance of the classification model. In the 3 continuous variables, we can dismiss the influence of `totalcharges` to customer `churn` rates.
+
+We can see the summary of model 2.
+```{r fitmodel,results=TRUE}
+xkabledply(lm2, title="summary of model 2")
+```
+In the 3 continuous variables, `tenure` has negative coefficients with `churn` and `monthlycharges` has positive coefficients with `churn`. It means when we have a customer with lower `tenure` and high `monthlycharges`, he has more probabilities to churn. And `totalcharges` is not significant influence factor to customer `churn` rates in 3 continuous variables.
+
+# Chapter 5: EDA on the joint effect of influencing factors
+
+From the exploration of each of the above variables, it is known that some of the above variables have a significant effect on customer churn; and from the correlation coefficient plot, it is known that these variables are interrelated. Therefore, we choose to graph the groups of variables with relatively large correlation coefficients (i.e., the absolute value of correlation coefficient is greater than 0.4) one by one to explore how they affect the customer churn rate.
+
+## Simple correlations
+
+Since most of variables are factors, it makes more sense to check their Spearman correlations.  
+```{r correlationPlot, fig.dim=c(8, 8)}
+customerNum = customer
+# convert categorical variable as numeric for spearman method
+for(i in 2:21){
+  # tenure, MonthlyCharges, TotalCharges
+  if (!(i %in% c(6, 19, 20))){
+    customerNum[,i] = as.numeric(customerNum[,i])
+  }
+}
+#str(customerNum)
+
+# corrplot with spearman method for categorical variables
+customercor <- cor(subset(customerNum, select=-c(customerID, prob)), method="spearman")
+#customercor
+loadPkg("corrplot")
+#corrplot.mixed(customercor, tl.pos = "lt", number.cex = .5, tl.cex=0.8)
+corrplot(customercor, type="lower", addCoef.col="black", number.cex=0.5, tl.cex=0.7,title="Telco Customer Churn Correlation", mar=c(0,0,1,0))
+unloadPkg("corrplot")
+```
+
+Larger circle means higher correlation. We can see that churn has negative correlation with contract and tenure, which means that customer who stays longer with the company or has a longer contract terms is less likely to churn. Customer who signed up for online security service and  has technical support plan is also less likely to churn. So it makes sense that contract and tech support have positive correlation, which means most customers who signed up for a technical support plan also have longer contract term.
+
+## Will Total Charge influence the churn rate with other variables?
+
+```{r violinplot}
+library(patchwork)
+
+tc1 <- ggplot(customer,aes(x = MultipleLines , y = TotalCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("MultipleLines") + ylab("TotalCharges")
+
+tc2 <- ggplot(customer,aes(x = Contract , y = TotalCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Contract") + ylab("TotalCharges")
+
+#tc3 <- ggplot(customer,aes(x = tenure , y = TotalCharges , fill = Churn)) +
+#  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+#  xlab("Tenure") + ylab("TotalCharges")
+
+tc3 <- ggplot(customer, aes(x=tenure, y=TotalCharges, color=Churn)) +
+  geom_point(size=0.6,alpha=0.4)
+
+tc3/ (tc1+tc2) + plot_annotation(title = 'TotalCharges plot')
+```
+
+First, `tenure` and `totalcharge` show a positive correlation. However, except for the time when tenure is less than 20, customer churn rate is higher, and the distribution of customer churn samples in other stages is more dispersed.
+
+Second, for `Multiplelines`, the sample groups of No multiplelines and No phone service have higher churn rates when `totalcharge` is not high.
+
+Finally, for the sample group of month-to-month `contracts`, customers are also prone to churn when the `totalcharge` is low.
+
+## Will Monthly Charge influence the churn rate with other variables?
+
+```{r}
+#m1 <- ggplot(customer,aes(x = TotalCharges , y = MonthlyCharges , fill = Churn)) +
+#  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+#  xlab("TotalCharges") + ylab("MonthlyCharges")
+
+m1 <- ggplot(customer, aes(x=MonthlyCharges, y=TotalCharges, color=Churn)) +
+  geom_point(size=0.1,alpha=0.4)
+
+m2 <- ggplot(customer,aes(x = MultipleLines , y = MonthlyCharges , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("MultipleLines") + ylab("MonthlyCharges")
+
+m1/m2 + plot_annotation(title = 'MonthlyCharges plot')
+```
+
+First, the first two sample groups with the lowest `MonthlyCharges` had low customer churn and a high number of customers. However, as `MonthlyCharges` increased after that, customer churn also started to increase, mainly concentrated when `TotalCharges` were still low.
+
+Second, the relationship between `MultipleLines` and `MonthlyCharges` leads to the following three conclusions.
+
+1. If the customers have no multiple lines service, they are likely to churn if their monthly charge are greater than 75 or between 30 and 50.
+
+2. If they have no phone service, we will find an interesting result that the more monthly charge they have, the less customer will churn.
+
+3. And if the customers have multiple lines service, they are like to churn when they have a monthly charge approximately greater than 70.
+
+## Will Tenure influence the churn rate with other variables?
+
+```{r}
+t1 <- ggplot(customer,aes(x = Partner , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Partner") + ylab("Tenure")
+
+t2 <- ggplot(customer,aes(x = Contract , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("Contract") + ylab("Tenure")
+
+t3 <- ggplot(customer,aes(x = PaymentMethod , y = tenure , fill = Churn)) +
+  geom_violin(alpha = 0.5, aes(linetype=NA)) +
+  xlab("PaymentMethod") + ylab("Tenure")
+
+(t1+t2)/t3 + 
+  plot_annotation(title = 'Tenure violinplot')
+```
+
+First, the customers who have no `partner` and short `tenure` are more likely to churn.
+
+Second, the customers who have a month-to-month `contract` and short `tenure` are more likely to churn. Also, when they have long `tenure` and a 2-year `contract`, their possibility of churn is obviously increased.
+
+Finally, the `payment method` is also a factor. The customers who use electronic check or mailed check are more likely to churn if their `tenure` is short.
+
+## Will Contract influence the churn rate with other variables?
+
+Since the four services `OnlineSecurity`, `OnlineBackup`, `TechSupport` and `DeviceProtection` and the variable `contract` are categorical variables, a direct scatter plot can only see nine points in the two-dimensional plane. Therefore, we first numerate these categorical variables and then discretize their values (i.e., add random numbers to the numerical results so that the points are evenly dispersed in the two-dimensional plane).
+
+```{r}
+contract_jitter <- customerNum$Contract*50 +runif(length(customerNum$Contract), -10, 10)
+OnlineSecurity_jitter <- customerNum$OnlineSecurity*50 +runif(length(customerNum$OnlineSecurity), -10, 10)
+c1 <- ggplot(customer, aes(x=contract_jitter, y=OnlineSecurity_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+TechSupport_jitter <- customerNum$TechSupport*50 +runif(length(customerNum$TechSupport), -10, 10)
+c2 <- ggplot(customer, aes(x=contract_jitter, y=TechSupport_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+OnlineBackupt_jitter <- customerNum$OnlineBackup*50 +runif(length(customerNum$OnlineBackup), -10, 10)
+c3 <- ggplot(customer, aes(x=contract_jitter, y=OnlineBackupt_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+DeviceProtection_jitter <- customerNum$DeviceProtection*50 +runif(length(customerNum$DeviceProtection), -10, 10)
+c4 <- ggplot(customer, aes(x=contract_jitter, y=DeviceProtection_jitter, color=Churn)) +
+  geom_point(size=0.01,alpha=0.8)
+
+(c1+c2)/(c3+c4)+plot_annotation(title = 'Contract Plot(wiht jittering)')
+```
+
+These 4 variables (`Online Security` & `Tech Support` & `Online Backup` & `Device Protection`) are probably influence, because we find that when customer do not have anyone of them, they are more likely to churn if they have a month-to-month `contract`, except `Device Protectio`n. The result shows that there are many people have `Device Protection` and month-to-month `contract` but still churn, even though the amount of these customers is less than the one who have no `Device Protection`.
+
+# Chapter 7: Model Comparison 
+## Logistic Regression
+The first model will be presented is logistic regression. The dataset has 19 variables, and first thing to do is feature selection. Firstly, we tried to use best glm to select out significant variables, but the variable within the dataset is more than 15. Therefore, we used logistic regression to remove the variables one by one instead of using best glm. We set alpha equals 0.1 which means we would remove the variables with p-value bigger than 0.1. Here is the first table after covering all variables. 
+```{r 1.1Logistic Regression}
+logistic_all = glm(Churn ~ gender + SeniorCitizen + Partner + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_all)
+xkabledply(logistic_all)
+
+```
+Delete `gender`
+
+```{r 1.2Logistic Regression}
+logistic_1 = glm(Churn ~ SeniorCitizen + Partner + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_1)
+xkabledply(logistic_1)
+
+```
+Delete `Partner`
+
+```{r 1.3Logistic Regression}
+logistic_2 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + PhoneService + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_2)
+xkabledply(logistic_2)
+
+```
+Delete `PhoneService`
+
+```{r 1.4Logistic Regression}
+logistic_3 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + MultipleLines + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_3)
+xkabledply(logistic_3)
+
+```
+Delete `MultipleLines`
+
+```{r 1.5Logistic Regression}
+logistic_4 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + OnlineBackup + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_4)
+xkabledply(logistic_4)
+
+```
+Delete `OnlineBackup`
+
+
+```{r 1.6Logistic Regression}
+logistic_5 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + DeviceProtection + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_5)
+xkabledply(logistic_5)
+
+```
+Delete `DeviceProtection`
+
+```{r 1.7Logistic Regression}
+logistic_6 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling + PaymentMethod
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_6)
+xkabledply(logistic_6)
+
+```
+Delete `PaymentMethod`
+
+```{r 1.8Logistic Regression}
+logistic_7 = glm(Churn ~ SeniorCitizen + Dependents + tenure
+                         + InternetService + OnlineSecurity
+                         + TechSupport + StreamingTV
+                         + StreamingMovies + Contract + PaperlessBilling
+                         + MonthlyCharges + TotalCharges, data = customer, family = 'binomial')
+summary(logistic_7)
+xkabledply(logistic_7)
+
+```
+The method is prolix, but fortune we got the final model after doing seven times. There are seven variables removed from the dataset. They have p-value bigger than 0.1. They are gender, partner, phone service, multiple lines, online backup, device protection, and payment method. Right now we can do next steps to analyze the models. 
+
+```{r exp}
+expcoeff1 = exp(coef(logistic_7))
+summary(expcoeff1)
+xkabledply( as.table(expcoeff1), title = "Exponential of coefficients in Churn" )
+
+```
+For exponential of coefficients, there are five variables having positive effect on dependent variables `Churn`, and six having negative effect. For example, if people have tech support, they will have more possibility to remain instead of leaving. 
+#### Confusion matrix 
+```{r confusionMatrix, results='markup'}
+loadPkg("regclass")
+confusion_matrix(logistic_7)
+xkabledply( confusion_matrix(logistic_7), title = "Confusion matrix from Logit Model" )
+unloadPkg("regclass")
+```
+
+```{r confusion matrix, results=T}
+loadPkg("regclass")
+cfmatrix1 = confusion_matrix(logistic_7)
+accuracy1 <- (cfmatrix1[1,1]+cfmatrix1[2,2])/cfmatrix1[3,3]
+precision1 <- cfmatrix1[2,2]/(cfmatrix1[2,2]+cfmatrix1[1,2])
+recall1 <- cfmatrix1[2,2]/(cfmatrix1[2,2]+cfmatrix1[2,1])
+specificity1 <- cfmatrix1[1,1]/(cfmatrix1[1,1]+cfmatrix1[1,2])
+F1_score1 <- 2*(precision1)*(recall1)/(precision1 + recall1)
+accuracy1
+precision1
+recall1
+specificity1
+F1_score1
+```
+From confusion matrix, we can conclude that 
+Accuracy =`r accuracy1`
+Precision=`r precision1`
+Recall=`r recall1`
+Specificity=`r specificity1`
+F1 score=`r F1_score1`
+
+```{r roc_auc, results=T}
+loadPkg("pROC") 
+prob=predict(logistic_7, type = "response" )
+customer$prob=prob
+h = roc(Churn~prob, data=customer)
+auc(h) 
+plot(h)
+```
+We have here the area-under-curve of `r auc(h)`, which is greater than 0.8. The model is considered a good fit.
+
+```{r McFadden, results=T}
+loadPkg("pscl")
+ChurnLogitpr2 = pR2(logistic_7)
+ChurnLogitpr2
+unloadPkg("pscl") 
+```
+With the McFadden value of `r ChurnLogitpr2['McFadden']`, which is analogous to the coefficient of determination $R^2$, only about 27.8% of the variations in y is explained by the explanatory variables in the model.
