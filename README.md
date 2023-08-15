@@ -23,6 +23,7 @@ The dataset contains information of 7043 customers in California at the end of 2
  
  * Folder "Final Summary Paper" contains the final summary html file(Final-Summary-Paper.thml) 
     - For a final summary of this project, please follow the instructions:
-     1. go to website https://htmlpreview.github.io
-     2. paste this url https://github.com/VivianDang/6101-Midterm-Project-Group-7/blob/main/Final%20Summary%20Paper/Final--Summary-Paper.html in the box and hit preview
+     1. go to website [https://htmlpreview.github.io
+     2. paste this url,it may take several minutes to load the page:
+        https://htmlpreview.github.io/?https://github.com/VivianDang/6101-Midterm-Project-Group-7/blob/main/Final%20Summary%20Paper/Final--Summary-Paper.html
   
